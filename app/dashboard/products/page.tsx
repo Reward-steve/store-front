@@ -1,50 +1,45 @@
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
-import { getProducts } from "../../actions/product";
 import { getShopByUser } from "../../actions/settings";
 import ProductsClient from "../../components/dashboard/ProductsClient";
-import { getProductLimit } from "../../actions/subscriptionGuard";
-import { normalizePlan } from "../../lib/utils";
-import { PLANS } from "../../lib/plans";
+import { getPlanStatus, splitProductsByPlanLimit } from "../../lib/plans";
+import { PLANS, getProductLimit } from "../../lib/plans";
 
 export const dynamic = "force-dynamic";
 
 export default async function ProductsPage() {
   const { userId } = await auth();
-
-  if (!userId) {
-    redirect("/login");
-  }
+  if (!userId) redirect("/login");
 
   const shop = await getShopByUser();
+  if (!shop) redirect("/onboarding");
 
-  if (!shop) {
-    redirect("/onboarding");
-  }
+  const status = getPlanStatus(shop); // shop is already synced — status.plan === shop.plan
+  const limit = getProductLimit(status.plan);
+  const freeLimit = getProductLimit("free")!;
 
-  const products = await getProducts();
+  const { active, locked } = splitProductsByPlanLimit(
+    shop.products,
+    status.plan,
+  );
+  const activeVisible = active.filter((p) => p.available).length;
+  const isOverFreeLimit =
+    status.plan === "free" && shop.products.length > freeLimit;
 
-  const available = products.filter((p) => p.available).length;
-
-  const serialized = products.map((p) => ({
+  const serialized = [...active, ...locked].map((p) => ({
     id: p.id,
     shopId: p.shopId,
     name: p.name,
     price: p.price,
     imageUrl: p.imageUrl,
     available: p.available,
+    locked: locked.some((l) => l.id === p.id),
     stock: p.stock,
     createdAt: p.createdAt,
   }));
 
- 
-
-  const limit = PLANS[shop.plan ?? "free"].productLimit;
-  const usage = products.length;
-
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-lg font-bold text-text leading-tight">
@@ -55,12 +50,12 @@ export default async function ProductsPage() {
           </p>
         </div>
 
-        {products.length > 0 && (
+        {shop.products.length > 0 && (
           <div className="text-right">
             <p className="text-lg font-black text-text leading-tight">
-              {available}
+              {activeVisible}
               <span className="text-text-muted font-normal">
-                /{products.length}
+                /{shop.products.length}
               </span>
             </p>
             <p className="text-[11px] text-text-muted">live</p>
@@ -68,26 +63,66 @@ export default async function ProductsPage() {
         )}
       </div>
 
-      {/* PLAN USAGE (NEW - IMPORTANT FOR MONETIZATION) */}
+      {/* Persists as long as the situation is real — no fade timer, since
+          the problem (hidden products) doesn't resolve itself. */}
+      {isOverFreeLimit && (
+        <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 space-y-2">
+          <p className="text-sm font-bold text-text">Your plan has expired</p>
+          <p className="text-xs text-text-muted leading-relaxed">
+            Your store is back on the Free plan. Your {freeLimit} oldest
+            products are still live on your storefront — the other{" "}
+            {locked.length} are disabled until you upgrade again. Nothing was
+            deleted.
+          </p>
+          <a
+            href="/dashboard/subscription"
+            className="inline-block text-xs font-bold text-primary underline underline-offset-2"
+          >
+            Upgrade to re-enable them →
+          </a>
+        </div>
+      )}
+
+      {status.isPaid && status.isExpiringSoon && (
+        <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 space-y-1">
+          <p className="text-sm font-bold text-text">
+            {PLANS[status.plan].label} plan renews in {status.daysLeft} day
+            {status.daysLeft === 1 ? "" : "s"}
+          </p>
+          <p className="text-xs text-text-muted leading-relaxed">
+            {shop.products.length > freeLimit
+              ? `If it lapses, only your ${freeLimit} oldest products stay visible to customers — the rest will be disabled, not deleted.`
+              : "Renew to keep your store fully active."}
+          </p>
+          <a
+            href="/dashboard/subscription"
+            className="inline-block text-xs font-bold text-primary underline underline-offset-2"
+          >
+            Renew now →
+          </a>
+        </div>
+      )}
+
       <div className="bg-surface border border-border rounded-2xl p-4 flex items-center justify-between">
         <div>
-          <p className="text-sm font-bold text-text capitalize">
-            {shop.plan} plan
+          <p className="text-sm font-bold text-text">
+            {PLANS[status.plan].label} plan
           </p>
           <p className="text-[11px] text-text-muted">
-            {usage}/{limit === null ? "∞" : limit} products used
+            {active.length}/{limit === null ? "∞" : limit} products used
           </p>
         </div>
-
-        {shop.plan === "free" && (
-          <span className="text-[10px] px-2 py-1 rounded-full bg-amber-100 text-amber-600 dark:bg-amber-900/20">
+        {status.plan === "free" && (
+          <a
+            href="/dashboard/subscription"
+            className="text-[10px] px-2 py-1 rounded-full bg-amber-100 text-amber-600 dark:bg-amber-900/20"
+          >
             Upgrade available
-          </span>
+          </a>
         )}
       </div>
 
-      {/* Context hint */}
-      {products.length > 0 && (
+      {shop.products.length > 0 && (
         <div className="flex items-center gap-2.5 bg-surface border border-border rounded-2xl px-4 py-3">
           <div className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
           <p className="text-[11px] text-text-muted leading-relaxed">
@@ -99,8 +134,8 @@ export default async function ProductsPage() {
       <ProductsClient
         products={serialized}
         shopSlug={shop.slug}
-        productLimit={getProductLimit(normalizePlan(shop.plan))}
-        plan={shop.plan}
+        productLimit={limit ?? Infinity}
+        plan={status.plan}
       />
     </div>
   );

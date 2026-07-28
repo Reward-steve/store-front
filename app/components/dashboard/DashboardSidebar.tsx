@@ -15,6 +15,7 @@ import {
   CreditCard,
   Zap,
   BadgeCheck,
+  ShoppingBag,
 } from "lucide-react";
 import { ThemeToggle } from "../../components/ui/ThemeProvider";
 import { useClerk } from "@clerk/nextjs";
@@ -22,6 +23,7 @@ import { cn } from "../../lib/utils";
 import { useState } from "react";
 import logo from "../../../public/trazo_omega.png";
 import { ShopPlan } from "../../types";
+import { PLANS } from "../../lib/plans";
 
 interface Shop {
   id: string;
@@ -32,7 +34,18 @@ interface Shop {
   products: { id: string; available: boolean }[];
 }
 
-const navLinks = [
+// Orders is gated to paid plans — this is presentation only (hides the tab
+// so free vendors aren't shown a feature they can't use), not enforcement.
+// The /dashboard/orders page redirects free-plan visitors on its own even
+// if this link is bypassed via a bookmark or direct URL.
+const ORDERS_LINK = {
+  href: "/dashboard/orders",
+  label: "Orders",
+  icon: ShoppingBag,
+  exact: false,
+};
+
+const baseNavLinks = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
   {
     href: "/dashboard/products",
@@ -54,31 +67,14 @@ const navLinks = [
   },
 ];
 
-// Single source of truth for plan limits + display info — keeps sidebar in
-// sync with subscription page without duplicating logic across files.
-const PLAN_INFO: Record<
-  ShopPlan,
-  { label: string; shortLabel: string; limit: number; hasBranding: boolean }
-> = {
-  free: {
-    label: "Free Plan",
-    shortLabel: "Free",
-    limit: 10,
-    hasBranding: true,
-  },
-  growth: {
-    label: "Growth Plan",
-    shortLabel: "Growth",
-    limit: 50,
-    hasBranding: false,
-  },
-  pro: {
-    label: "Pro Plan",
-    shortLabel: "Pro",
-    limit: 999,
-    hasBranding: false,
-  },
-};
+function getNavLinks(plan: ShopPlan) {
+  if (plan === "free") return baseNavLinks;
+
+  // Insert right after Products — keeps the "what customers see" cluster
+  // (Products, Orders) together before the account-management links.
+  const [overview, products, ...rest] = baseNavLinks;
+  return [overview, products, ORDERS_LINK, ...rest];
+}
 
 // What a free/growth user unlocks by upgrading — shown in the sidebar nudge
 const UPGRADE_NUDGE: Partial<
@@ -86,7 +82,7 @@ const UPGRADE_NUDGE: Partial<
 > = {
   free: {
     target: "growth",
-    blurb: "₦1,500/mo · 50 products · no branding",
+    blurb: "₦1,500/mo · 40 products · no branding",
   },
   growth: {
     target: "pro",
@@ -102,13 +98,14 @@ export default function DashboardSidebar({ shop }: { shop: Shop }) {
   const storefrontUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/store/${shop.slug}`;
   const availableCount = shop.products.filter((p) => p.available).length;
 
-  const planInfo = PLAN_INFO[shop.plan];
-  const productLimit = planInfo.limit;
+  const planInfo = PLANS[shop.plan];
+  const productLimit = planInfo.productLimit;
   const isUnlimited = shop.plan === "pro";
   const isNearLimit = !isUnlimited && shop.products.length >= productLimit - 2;
   const isAtLimit = !isUnlimited && shop.products.length >= productLimit;
 
   const nudge = UPGRADE_NUDGE[shop.plan];
+  const navLinks = getNavLinks(shop.plan);
 
   const isActive = (href: string, exact: boolean) =>
     exact ? pathname === href : pathname.startsWith(href);
@@ -287,7 +284,7 @@ export default function DashboardSidebar({ shop }: { shop: Shop }) {
               <Zap className="h-4 w-4 text-primary-dark shrink-0" />
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-bold text-primary-dark leading-tight">
-                  Upgrade to {PLAN_INFO[nudge.target].shortLabel}
+                  Upgrade to {PLANS[nudge.target].label}
                 </p>
                 <p className="text-[10px] text-text-muted mt-0.5">
                   {nudge.blurb}
@@ -311,7 +308,7 @@ export default function DashboardSidebar({ shop }: { shop: Shop }) {
 
       {/* ── MOBILE BOTTOM TAB BAR ───────────────────────────────── */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface border-t border-border">
-        <nav className="flex items-center justify-around px-2 py-1">
+        <nav className="flex items-center justify-around px-1 py-1 overflow-x-auto">
           {navLinks.map(({ href, label, icon: Icon, exact }) => {
             const active = isActive(href, exact);
             return (
@@ -319,7 +316,7 @@ export default function DashboardSidebar({ shop }: { shop: Shop }) {
                 key={href}
                 href={href}
                 style={{ touchAction: "manipulation" }}
-                className="flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl min-w-0 select-none"
+                className="flex flex-col items-center gap-0.5 px-2.5 py-2 rounded-xl min-w-0 shrink-0 select-none"
               >
                 <div
                   className={cn(
@@ -354,7 +351,7 @@ export default function DashboardSidebar({ shop }: { shop: Shop }) {
           <button
             onClick={() => signOut({ redirectUrl: "/" })}
             style={{ touchAction: "manipulation" }}
-            className="flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl min-w-0 select-none"
+            className="flex flex-col items-center gap-0.5 px-2.5 py-2 rounded-xl min-w-0 shrink-0 select-none"
           >
             <div className="h-8 w-8 flex items-center justify-center rounded-xl">
               <LogOut className="h-5 w-5 text-red-500" />
