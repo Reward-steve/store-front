@@ -16,6 +16,8 @@ import {
   Zap,
   BadgeCheck,
   ShoppingBag,
+  MoreHorizontal,
+  X,
 } from "lucide-react";
 import { ThemeToggle } from "../../components/ui/ThemeProvider";
 import { useClerk } from "@clerk/nextjs";
@@ -34,46 +36,80 @@ interface Shop {
   products: { id: string; available: boolean }[];
 }
 
+type NavLink = {
+  href: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  exact: boolean;
+};
+
 // Orders is gated to paid plans — this is presentation only (hides the tab
 // so free vendors aren't shown a feature they can't use), not enforcement.
 // The /dashboard/orders page redirects free-plan visitors on its own even
 // if this link is bypassed via a bookmark or direct URL.
-const ORDERS_LINK = {
+const ORDERS_LINK: NavLink = {
   href: "/dashboard/orders",
   label: "Orders",
   icon: ShoppingBag,
   exact: false,
 };
 
+const OVERVIEW_LINK: NavLink = {
+  href: "/dashboard",
+  label: "Overview",
+  icon: LayoutDashboard,
+  exact: true,
+};
+const PRODUCTS_LINK: NavLink = {
+  href: "/dashboard/products",
+  label: "Products",
+  icon: Package,
+  exact: false,
+};
+const SETTINGS_LINK: NavLink = {
+  href: "/dashboard/settings",
+  label: "Settings",
+  icon: Settings,
+  exact: false,
+};
+const SUBSCRIPTION_LINK: NavLink = {
+  href: "/dashboard/subscription",
+  label: "Subscription",
+  icon: CreditCard,
+  exact: false,
+};
+
 const baseNavLinks = [
-  { href: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
-  {
-    href: "/dashboard/products",
-    label: "Products",
-    icon: Package,
-    exact: false,
-  },
-  {
-    href: "/dashboard/settings",
-    label: "Settings",
-    icon: Settings,
-    exact: false,
-  },
-  {
-    href: "/dashboard/subscription",
-    label: "Subscription",
-    icon: CreditCard,
-    exact: false,
-  },
+  OVERVIEW_LINK,
+  PRODUCTS_LINK,
+  SETTINGS_LINK,
+  SUBSCRIPTION_LINK,
 ];
 
+// Full list — used by the desktop sidebar, which has room for everything.
 function getNavLinks(plan: ShopPlan) {
   if (plan === "free") return baseNavLinks;
+  return [
+    OVERVIEW_LINK,
+    PRODUCTS_LINK,
+    ORDERS_LINK,
+    SETTINGS_LINK,
+    SUBSCRIPTION_LINK,
+  ];
+}
 
-  // Insert right after Products — keeps the "what customers see" cluster
-  // (Products, Orders) together before the account-management links.
-  const [overview, products, ...rest] = baseNavLinks;
-  return [overview, products, ORDERS_LINK, ...rest];
+// Mobile bar only ever shows 3 fixed destinations + "More" — deliberately
+// different from the full desktop list, not just a truncation of it, so
+// each plan's most-checked destination (Orders for paid, Subscription as
+// the upgrade path for free) gets one of the scarce primary slots.
+function getMobilePrimaryLinks(plan: ShopPlan): NavLink[] {
+  if (plan === "free") return [OVERVIEW_LINK, PRODUCTS_LINK, SUBSCRIPTION_LINK];
+  return [OVERVIEW_LINK, PRODUCTS_LINK, ORDERS_LINK];
+}
+
+function getMobileMoreLinks(plan: ShopPlan): NavLink[] {
+  if (plan === "free") return [SETTINGS_LINK];
+  return [SETTINGS_LINK, SUBSCRIPTION_LINK];
 }
 
 // What a free/growth user unlocks by upgrading — shown in the sidebar nudge
@@ -94,6 +130,7 @@ export default function DashboardSidebar({ shop }: { shop: Shop }) {
   const pathname = usePathname();
   const { signOut } = useClerk();
   const [copied, setCopied] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
 
   const storefrontUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/store/${shop.slug}`;
   const availableCount = shop.products.filter((p) => p.available).length;
@@ -106,9 +143,15 @@ export default function DashboardSidebar({ shop }: { shop: Shop }) {
 
   const nudge = UPGRADE_NUDGE[shop.plan];
   const navLinks = getNavLinks(shop.plan);
+  const mobilePrimaryLinks = getMobilePrimaryLinks(shop.plan);
+  const mobileMoreLinks = getMobileMoreLinks(shop.plan);
 
   const isActive = (href: string, exact: boolean) =>
     exact ? pathname === href : pathname.startsWith(href);
+
+  const isMoreActive = mobileMoreLinks.some((link) =>
+    isActive(link.href, link.exact),
+  );
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(storefrontUrl);
@@ -306,17 +349,17 @@ export default function DashboardSidebar({ shop }: { shop: Shop }) {
         </div>
       </aside>
 
-      {/* ── MOBILE BOTTOM TAB BAR ───────────────────────────────── */}
+      {/* ── MOBILE — 3 primary tabs + More ─────────────────────── */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface border-t border-border">
-        <nav className="flex items-center justify-around px-1 py-1 overflow-x-auto">
-          {navLinks.map(({ href, label, icon: Icon, exact }) => {
+        <nav className="flex items-center justify-around px-2 py-1">
+          {mobilePrimaryLinks.map(({ href, label, icon: Icon, exact }) => {
             const active = isActive(href, exact);
             return (
               <Link
                 key={href}
                 href={href}
                 style={{ touchAction: "manipulation" }}
-                className="flex flex-col items-center gap-0.5 px-2.5 py-2 rounded-xl min-w-0 shrink-0 select-none"
+                className="flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl min-w-0 select-none"
               >
                 <div
                   className={cn(
@@ -330,7 +373,6 @@ export default function DashboardSidebar({ shop }: { shop: Shop }) {
                       active ? "text-primary-dark" : "text-text-muted",
                     )}
                   />
-                  {/* Limit warning dot on products tab */}
                   {href === "/dashboard/products" && isAtLimit && (
                     <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500" />
                   )}
@@ -347,21 +389,110 @@ export default function DashboardSidebar({ shop }: { shop: Shop }) {
             );
           })}
 
-          {/* Sign out */}
+          {/* More — opens a sheet with Settings/Subscription/Sign out */}
           <button
-            onClick={() => signOut({ redirectUrl: "/" })}
+            onClick={() => setMoreOpen(true)}
             style={{ touchAction: "manipulation" }}
-            className="flex flex-col items-center gap-0.5 px-2.5 py-2 rounded-xl min-w-0 shrink-0 select-none"
+            className="flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl min-w-0 select-none"
+            aria-haspopup="true"
+            aria-expanded={moreOpen}
           >
-            <div className="h-8 w-8 flex items-center justify-center rounded-xl">
-              <LogOut className="h-5 w-5 text-red-500" />
+            <div
+              className={cn(
+                "h-8 w-8 flex items-center justify-center rounded-xl transition-colors relative",
+                isMoreActive ? "bg-bubble-out" : "",
+              )}
+            >
+              <MoreHorizontal
+                className={cn(
+                  "h-5 w-5",
+                  isMoreActive ? "text-primary-dark" : "text-text-muted",
+                )}
+              />
+              {/* Billing dot moves here for paid plans, since Subscription
+                  now lives inside More rather than as its own tab */}
+              {shop.plan !== "free" && (
+                <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-primary" />
+              )}
             </div>
-            <span className="text-[10px] font-medium leading-none text-red-500">
-              Out
+            <span
+              className={cn(
+                "text-[10px] font-medium leading-none",
+                isMoreActive ? "text-primary-dark" : "text-text-muted",
+              )}
+            >
+              More
             </span>
           </button>
         </nav>
       </div>
+
+      {/* More sheet */}
+      {moreOpen && (
+        <div className="md:hidden fixed inset-0 z-50">
+          <button
+            aria-label="Close menu"
+            onClick={() => setMoreOpen(false)}
+            className="absolute inset-0 bg-black/40"
+          />
+          <div className="absolute bottom-0 left-0 right-0 bg-surface rounded-t-2xl border-t border-border p-4 pb-6 space-y-1">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-bold text-text">More</p>
+              <button
+                onClick={() => setMoreOpen(false)}
+                aria-label="Close"
+                style={{ touchAction: "manipulation" }}
+                className="p-1.5 rounded-lg text-text-muted hover:bg-surface-alt"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {mobileMoreLinks.map(({ href, label, icon: Icon, exact }) => {
+              const active = isActive(href, exact);
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={() => setMoreOpen(false)}
+                  style={{ touchAction: "manipulation" }}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-colors",
+                    active
+                      ? "bg-bubble-out text-primary-dark"
+                      : "text-text-muted hover:bg-surface-alt",
+                  )}
+                >
+                  <Icon className="h-4 w-4 shrink-0" />
+                  <span>{label}</span>
+                  {href === "/dashboard/subscription" && (
+                    <span
+                      className={cn(
+                        "ml-auto h-2 w-2 rounded-full",
+                        shop.plan !== "free"
+                          ? "bg-primary"
+                          : "bg-text-muted/40",
+                      )}
+                    />
+                  )}
+                </Link>
+              );
+            })}
+
+            <button
+              onClick={() => {
+                setMoreOpen(false);
+                signOut({ redirectUrl: "/" });
+              }}
+              style={{ touchAction: "manipulation" }}
+              className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-red-500 hover:bg-red-500/10 transition-colors w-full"
+            >
+              <LogOut className="h-4 w-4 shrink-0" />
+              <span>Sign out</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="md:hidden h-16 shrink-0" />
     </>
