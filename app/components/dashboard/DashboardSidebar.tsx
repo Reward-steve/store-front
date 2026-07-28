@@ -4,20 +4,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard,
-  Package,
-  Settings,
   ExternalLink,
   LogOut,
   Store,
   Copy,
   CheckCircle,
-  CreditCard,
   Zap,
   BadgeCheck,
-  ShoppingBag,
   MoreHorizontal,
-  X,
 } from "lucide-react";
 import { ThemeToggle } from "../../components/ui/ThemeProvider";
 import { useClerk } from "@clerk/nextjs";
@@ -26,6 +20,11 @@ import { useState } from "react";
 import logo from "../../../public/trazo_omega.png";
 import { ShopPlan } from "../../types";
 import { PLANS } from "../../lib/plans";
+import {
+  getNavLinks,
+  getMobilePrimaryLinks,
+  getMobileMoreLinks,
+} from "../../lib/dashboardNav";
 
 interface Shop {
   id: string;
@@ -36,101 +35,18 @@ interface Shop {
   products: { id: string; available: boolean }[];
 }
 
-type NavLink = {
-  href: string;
-  label: string;
-  icon: typeof LayoutDashboard;
-  exact: boolean;
-};
-
-// Orders is gated to paid plans — this is presentation only (hides the tab
-// so free vendors aren't shown a feature they can't use), not enforcement.
-// The /dashboard/orders page redirects free-plan visitors on its own even
-// if this link is bypassed via a bookmark or direct URL.
-const ORDERS_LINK: NavLink = {
-  href: "/dashboard/orders",
-  label: "Orders",
-  icon: ShoppingBag,
-  exact: false,
-};
-
-const OVERVIEW_LINK: NavLink = {
-  href: "/dashboard",
-  label: "Overview",
-  icon: LayoutDashboard,
-  exact: true,
-};
-const PRODUCTS_LINK: NavLink = {
-  href: "/dashboard/products",
-  label: "Products",
-  icon: Package,
-  exact: false,
-};
-const SETTINGS_LINK: NavLink = {
-  href: "/dashboard/settings",
-  label: "Settings",
-  icon: Settings,
-  exact: false,
-};
-const SUBSCRIPTION_LINK: NavLink = {
-  href: "/dashboard/subscription",
-  label: "Subscription",
-  icon: CreditCard,
-  exact: false,
-};
-
-const baseNavLinks = [
-  OVERVIEW_LINK,
-  PRODUCTS_LINK,
-  SETTINGS_LINK,
-  SUBSCRIPTION_LINK,
-];
-
-// Full list — used by the desktop sidebar, which has room for everything.
-function getNavLinks(plan: ShopPlan) {
-  if (plan === "free") return baseNavLinks;
-  return [
-    OVERVIEW_LINK,
-    PRODUCTS_LINK,
-    ORDERS_LINK,
-    SETTINGS_LINK,
-    SUBSCRIPTION_LINK,
-  ];
-}
-
-// Mobile bar only ever shows 3 fixed destinations + "More" — deliberately
-// different from the full desktop list, not just a truncation of it, so
-// each plan's most-checked destination (Orders for paid, Subscription as
-// the upgrade path for free) gets one of the scarce primary slots.
-function getMobilePrimaryLinks(plan: ShopPlan): NavLink[] {
-  if (plan === "free") return [OVERVIEW_LINK, PRODUCTS_LINK, SUBSCRIPTION_LINK];
-  return [OVERVIEW_LINK, PRODUCTS_LINK, ORDERS_LINK];
-}
-
-function getMobileMoreLinks(plan: ShopPlan): NavLink[] {
-  if (plan === "free") return [SETTINGS_LINK];
-  return [SETTINGS_LINK, SUBSCRIPTION_LINK];
-}
-
 // What a free/growth user unlocks by upgrading — shown in the sidebar nudge
 const UPGRADE_NUDGE: Partial<
   Record<ShopPlan, { target: ShopPlan; blurb: string }>
 > = {
-  free: {
-    target: "growth",
-    blurb: "₦1,500/mo · 40 products · no branding",
-  },
-  growth: {
-    target: "pro",
-    blurb: "₦3,500/mo · unlimited products",
-  },
+  free: { target: "growth", blurb: "₦1,500/mo · 40 products · no branding" },
+  growth: { target: "pro", blurb: "₦3,500/mo · unlimited products" },
 };
 
 export default function DashboardSidebar({ shop }: { shop: Shop }) {
   const pathname = usePathname();
   const { signOut } = useClerk();
   const [copied, setCopied] = useState(false);
-  const [moreOpen, setMoreOpen] = useState(false);
 
   const storefrontUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/store/${shop.slug}`;
   const availableCount = shop.products.filter((p) => p.available).length;
@@ -149,9 +65,12 @@ export default function DashboardSidebar({ shop }: { shop: Shop }) {
   const isActive = (href: string, exact: boolean) =>
     exact ? pathname === href : pathname.startsWith(href);
 
-  const isMoreActive = mobileMoreLinks.some((link) =>
-    isActive(link.href, link.exact),
-  );
+  // The More tab stays highlighted whenever you're anywhere inside it —
+  // on /dashboard/more itself, or drilled into Settings/Subscription from
+  // there — same convention as native "More" tabs (e.g. iOS UITabBarController).
+  const isMoreActive =
+    pathname.startsWith("/dashboard/more") ||
+    mobileMoreLinks.some((link) => isActive(link.href, link.exact));
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(storefrontUrl);
@@ -163,7 +82,6 @@ export default function DashboardSidebar({ shop }: { shop: Shop }) {
     <>
       {/* ── DESKTOP SIDEBAR ─────────────────────────────────────── */}
       <aside className="hidden md:flex w-60 shrink-0 flex-col h-screen sticky top-0 border-r border-border bg-surface">
-        {/* Logo + theme toggle */}
         <div className="px-4 py-4 border-b border-border flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <div className="relative h-9 w-9 rounded-xl overflow-hidden shrink-0 bg-surface-alt">
@@ -178,7 +96,6 @@ export default function DashboardSidebar({ shop }: { shop: Shop }) {
           <ThemeToggle />
         </div>
 
-        {/* Shop identity */}
         <div className="px-3 py-3 border-b border-border">
           <div className="flex items-center gap-2.5">
             {shop.logoUrl ? (
@@ -205,7 +122,6 @@ export default function DashboardSidebar({ shop }: { shop: Shop }) {
             </div>
           </div>
 
-          {/* Store link */}
           <div className="mt-2.5 flex items-center gap-1 bg-surface-alt rounded-xl px-2.5 py-1.5 border border-border">
             <p className="text-[11px] text-text-muted truncate flex-1">
               /store/{shop.slug}
@@ -232,7 +148,6 @@ export default function DashboardSidebar({ shop }: { shop: Shop }) {
             </Link>
           </div>
 
-          {/* Plan badge */}
           <div className="mt-2 flex items-center justify-between">
             <span
               className={cn(
@@ -260,7 +175,6 @@ export default function DashboardSidebar({ shop }: { shop: Shop }) {
           </div>
         </div>
 
-        {/* Nav */}
         <nav className="flex-1 px-3 py-3 space-y-0.5">
           {navLinks.map(({ href, label, icon: Icon, exact }) => {
             const active = isActive(href, exact);
@@ -283,7 +197,6 @@ export default function DashboardSidebar({ shop }: { shop: Shop }) {
                 />
                 <span>{label}</span>
 
-                {/* Products count badge — hidden once unlimited (pro) */}
                 {href === "/dashboard/products" &&
                   shop.products.length > 0 &&
                   !isUnlimited && (
@@ -303,7 +216,6 @@ export default function DashboardSidebar({ shop }: { shop: Shop }) {
                     </span>
                   )}
 
-                {/* Billing dot — filled for any paid plan, grey for free */}
                 {href === "/dashboard/subscription" && (
                   <span
                     className={cn(
@@ -317,7 +229,6 @@ export default function DashboardSidebar({ shop }: { shop: Shop }) {
           })}
         </nav>
 
-        {/* Upgrade nudge — free → Growth, growth → Pro, hidden entirely on Pro */}
         {nudge && (
           <div className="mx-3 mb-3">
             <Link
@@ -337,7 +248,6 @@ export default function DashboardSidebar({ shop }: { shop: Shop }) {
           </div>
         )}
 
-        {/* Sign out */}
         <div className="px-3 pb-4 pt-3 border-t border-border">
           <button
             onClick={() => signOut({ redirectUrl: "/" })}
@@ -349,7 +259,7 @@ export default function DashboardSidebar({ shop }: { shop: Shop }) {
         </div>
       </aside>
 
-      {/* ── MOBILE — 3 primary tabs + More ─────────────────────── */}
+      {/* ── MOBILE — 3 primary tabs + More (real route) ────────── */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface border-t border-border">
         <nav className="flex items-center justify-around px-2 py-1">
           {mobilePrimaryLinks.map(({ href, label, icon: Icon, exact }) => {
@@ -389,13 +299,10 @@ export default function DashboardSidebar({ shop }: { shop: Shop }) {
             );
           })}
 
-          {/* More — opens a sheet with Settings/Subscription/Sign out */}
-          <button
-            onClick={() => setMoreOpen(true)}
+          <Link
+            href="/dashboard/more"
             style={{ touchAction: "manipulation" }}
             className="flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl min-w-0 select-none"
-            aria-haspopup="true"
-            aria-expanded={moreOpen}
           >
             <div
               className={cn(
@@ -409,8 +316,6 @@ export default function DashboardSidebar({ shop }: { shop: Shop }) {
                   isMoreActive ? "text-primary-dark" : "text-text-muted",
                 )}
               />
-              {/* Billing dot moves here for paid plans, since Subscription
-                  now lives inside More rather than as its own tab */}
               {shop.plan !== "free" && (
                 <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-primary" />
               )}
@@ -423,76 +328,9 @@ export default function DashboardSidebar({ shop }: { shop: Shop }) {
             >
               More
             </span>
-          </button>
+          </Link>
         </nav>
       </div>
-
-      {/* More sheet */}
-      {moreOpen && (
-        <div className="md:hidden fixed inset-0 z-50">
-          <button
-            aria-label="Close menu"
-            onClick={() => setMoreOpen(false)}
-            className="absolute inset-0 bg-black/40"
-          />
-          <div className="absolute bottom-0 left-0 right-0 bg-surface rounded-t-2xl border-t border-border p-4 pb-6 space-y-1">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-bold text-text">More</p>
-              <button
-                onClick={() => setMoreOpen(false)}
-                aria-label="Close"
-                style={{ touchAction: "manipulation" }}
-                className="p-1.5 rounded-lg text-text-muted hover:bg-surface-alt"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            {mobileMoreLinks.map(({ href, label, icon: Icon, exact }) => {
-              const active = isActive(href, exact);
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  onClick={() => setMoreOpen(false)}
-                  style={{ touchAction: "manipulation" }}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-colors",
-                    active
-                      ? "bg-bubble-out text-primary-dark"
-                      : "text-text-muted hover:bg-surface-alt",
-                  )}
-                >
-                  <Icon className="h-4 w-4 shrink-0" />
-                  <span>{label}</span>
-                  {href === "/dashboard/subscription" && (
-                    <span
-                      className={cn(
-                        "ml-auto h-2 w-2 rounded-full",
-                        shop.plan !== "free"
-                          ? "bg-primary"
-                          : "bg-text-muted/40",
-                      )}
-                    />
-                  )}
-                </Link>
-              );
-            })}
-
-            <button
-              onClick={() => {
-                setMoreOpen(false);
-                signOut({ redirectUrl: "/" });
-              }}
-              style={{ touchAction: "manipulation" }}
-              className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-red-500 hover:bg-red-500/10 transition-colors w-full"
-            >
-              <LogOut className="h-4 w-4 shrink-0" />
-              <span>Sign out</span>
-            </button>
-          </div>
-        </div>
-      )}
 
       <div className="md:hidden h-16 shrink-0" />
     </>
