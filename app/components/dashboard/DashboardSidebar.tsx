@@ -4,18 +4,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard,
-  Package,
-  Settings,
   ExternalLink,
   LogOut,
   Store,
   Copy,
   CheckCircle,
-  CreditCard,
   Zap,
   BadgeCheck,
-  ShoppingBag,
+  MoreHorizontal,
 } from "lucide-react";
 import { ThemeToggle } from "../../components/ui/ThemeProvider";
 import { useClerk } from "@clerk/nextjs";
@@ -24,6 +20,11 @@ import { useState } from "react";
 import logo from "../../../public/trazo_omega.png";
 import { ShopPlan } from "../../types";
 import { PLANS } from "../../lib/plans";
+import {
+  getNavLinks,
+  getMobilePrimaryLinks,
+  getMobileMoreLinks,
+} from "../../lib/dashboardNav";
 
 interface Shop {
   id: string;
@@ -34,60 +35,12 @@ interface Shop {
   products: { id: string; available: boolean }[];
 }
 
-// Orders is gated to paid plans — this is presentation only (hides the tab
-// so free vendors aren't shown a feature they can't use), not enforcement.
-// The /dashboard/orders page redirects free-plan visitors on its own even
-// if this link is bypassed via a bookmark or direct URL.
-const ORDERS_LINK = {
-  href: "/dashboard/orders",
-  label: "Orders",
-  icon: ShoppingBag,
-  exact: false,
-};
-
-const baseNavLinks = [
-  { href: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
-  {
-    href: "/dashboard/products",
-    label: "Products",
-    icon: Package,
-    exact: false,
-  },
-  {
-    href: "/dashboard/settings",
-    label: "Settings",
-    icon: Settings,
-    exact: false,
-  },
-  {
-    href: "/dashboard/subscription",
-    label: "Subscription",
-    icon: CreditCard,
-    exact: false,
-  },
-];
-
-function getNavLinks(plan: ShopPlan) {
-  if (plan === "free") return baseNavLinks;
-
-  // Insert right after Products — keeps the "what customers see" cluster
-  // (Products, Orders) together before the account-management links.
-  const [overview, products, ...rest] = baseNavLinks;
-  return [overview, products, ORDERS_LINK, ...rest];
-}
-
 // What a free/growth user unlocks by upgrading — shown in the sidebar nudge
 const UPGRADE_NUDGE: Partial<
   Record<ShopPlan, { target: ShopPlan; blurb: string }>
 > = {
-  free: {
-    target: "growth",
-    blurb: "₦1,500/mo · 40 products · no branding",
-  },
-  growth: {
-    target: "pro",
-    blurb: "₦3,500/mo · unlimited products",
-  },
+  free: { target: "growth", blurb: "₦1,500/mo · 40 products · no branding" },
+  growth: { target: "pro", blurb: "₦3,500/mo · unlimited products" },
 };
 
 export default function DashboardSidebar({ shop }: { shop: Shop }) {
@@ -106,9 +59,18 @@ export default function DashboardSidebar({ shop }: { shop: Shop }) {
 
   const nudge = UPGRADE_NUDGE[shop.plan];
   const navLinks = getNavLinks(shop.plan);
+  const mobilePrimaryLinks = getMobilePrimaryLinks(shop.plan);
+  const mobileMoreLinks = getMobileMoreLinks(shop.plan);
 
   const isActive = (href: string, exact: boolean) =>
     exact ? pathname === href : pathname.startsWith(href);
+
+  // The More tab stays highlighted whenever you're anywhere inside it —
+  // on /dashboard/more itself, or drilled into Settings/Subscription from
+  // there — same convention as native "More" tabs (e.g. iOS UITabBarController).
+  const isMoreActive =
+    pathname.startsWith("/dashboard/more") ||
+    mobileMoreLinks.some((link) => isActive(link.href, link.exact));
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(storefrontUrl);
@@ -120,7 +82,6 @@ export default function DashboardSidebar({ shop }: { shop: Shop }) {
     <>
       {/* ── DESKTOP SIDEBAR ─────────────────────────────────────── */}
       <aside className="hidden md:flex w-60 shrink-0 flex-col h-screen sticky top-0 border-r border-border bg-surface">
-        {/* Logo + theme toggle */}
         <div className="px-4 py-4 border-b border-border flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <div className="relative h-9 w-9 rounded-xl overflow-hidden shrink-0 bg-surface-alt">
@@ -135,7 +96,6 @@ export default function DashboardSidebar({ shop }: { shop: Shop }) {
           <ThemeToggle />
         </div>
 
-        {/* Shop identity */}
         <div className="px-3 py-3 border-b border-border">
           <div className="flex items-center gap-2.5">
             {shop.logoUrl ? (
@@ -162,7 +122,6 @@ export default function DashboardSidebar({ shop }: { shop: Shop }) {
             </div>
           </div>
 
-          {/* Store link */}
           <div className="mt-2.5 flex items-center gap-1 bg-surface-alt rounded-xl px-2.5 py-1.5 border border-border">
             <p className="text-[11px] text-text-muted truncate flex-1">
               /store/{shop.slug}
@@ -189,7 +148,6 @@ export default function DashboardSidebar({ shop }: { shop: Shop }) {
             </Link>
           </div>
 
-          {/* Plan badge */}
           <div className="mt-2 flex items-center justify-between">
             <span
               className={cn(
@@ -217,7 +175,6 @@ export default function DashboardSidebar({ shop }: { shop: Shop }) {
           </div>
         </div>
 
-        {/* Nav */}
         <nav className="flex-1 px-3 py-3 space-y-0.5">
           {navLinks.map(({ href, label, icon: Icon, exact }) => {
             const active = isActive(href, exact);
@@ -240,7 +197,6 @@ export default function DashboardSidebar({ shop }: { shop: Shop }) {
                 />
                 <span>{label}</span>
 
-                {/* Products count badge — hidden once unlimited (pro) */}
                 {href === "/dashboard/products" &&
                   shop.products.length > 0 &&
                   !isUnlimited && (
@@ -260,7 +216,6 @@ export default function DashboardSidebar({ shop }: { shop: Shop }) {
                     </span>
                   )}
 
-                {/* Billing dot — filled for any paid plan, grey for free */}
                 {href === "/dashboard/subscription" && (
                   <span
                     className={cn(
@@ -274,7 +229,6 @@ export default function DashboardSidebar({ shop }: { shop: Shop }) {
           })}
         </nav>
 
-        {/* Upgrade nudge — free → Growth, growth → Pro, hidden entirely on Pro */}
         {nudge && (
           <div className="mx-3 mb-3">
             <Link
@@ -294,7 +248,6 @@ export default function DashboardSidebar({ shop }: { shop: Shop }) {
           </div>
         )}
 
-        {/* Sign out */}
         <div className="px-3 pb-4 pt-3 border-t border-border">
           <button
             onClick={() => signOut({ redirectUrl: "/" })}
@@ -306,17 +259,17 @@ export default function DashboardSidebar({ shop }: { shop: Shop }) {
         </div>
       </aside>
 
-      {/* ── MOBILE BOTTOM TAB BAR ───────────────────────────────── */}
+      {/* ── MOBILE — 3 primary tabs + More (real route) ────────── */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface border-t border-border">
-        <nav className="flex items-center justify-around px-1 py-1 overflow-x-auto">
-          {navLinks.map(({ href, label, icon: Icon, exact }) => {
+        <nav className="flex items-center justify-around px-2 py-1">
+          {mobilePrimaryLinks.map(({ href, label, icon: Icon, exact }) => {
             const active = isActive(href, exact);
             return (
               <Link
                 key={href}
                 href={href}
                 style={{ touchAction: "manipulation" }}
-                className="flex flex-col items-center gap-0.5 px-2.5 py-2 rounded-xl min-w-0 shrink-0 select-none"
+                className="flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl min-w-0 select-none"
               >
                 <div
                   className={cn(
@@ -330,7 +283,6 @@ export default function DashboardSidebar({ shop }: { shop: Shop }) {
                       active ? "text-primary-dark" : "text-text-muted",
                     )}
                   />
-                  {/* Limit warning dot on products tab */}
                   {href === "/dashboard/products" && isAtLimit && (
                     <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500" />
                   )}
@@ -347,19 +299,36 @@ export default function DashboardSidebar({ shop }: { shop: Shop }) {
             );
           })}
 
-          {/* Sign out */}
-          <button
-            onClick={() => signOut({ redirectUrl: "/" })}
+          <Link
+            href="/dashboard/more"
             style={{ touchAction: "manipulation" }}
-            className="flex flex-col items-center gap-0.5 px-2.5 py-2 rounded-xl min-w-0 shrink-0 select-none"
+            className="flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl min-w-0 select-none"
           >
-            <div className="h-8 w-8 flex items-center justify-center rounded-xl">
-              <LogOut className="h-5 w-5 text-red-500" />
+            <div
+              className={cn(
+                "h-8 w-8 flex items-center justify-center rounded-xl transition-colors relative",
+                isMoreActive ? "bg-bubble-out" : "",
+              )}
+            >
+              <MoreHorizontal
+                className={cn(
+                  "h-5 w-5",
+                  isMoreActive ? "text-primary-dark" : "text-text-muted",
+                )}
+              />
+              {shop.plan !== "free" && (
+                <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-primary" />
+              )}
             </div>
-            <span className="text-[10px] font-medium leading-none text-red-500">
-              Out
+            <span
+              className={cn(
+                "text-[10px] font-medium leading-none",
+                isMoreActive ? "text-primary-dark" : "text-text-muted",
+              )}
+            >
+              More
             </span>
-          </button>
+          </Link>
         </nav>
       </div>
 
