@@ -11,7 +11,7 @@ import {
   CheckCircle,
   Zap,
   BadgeCheck,
-  MoreHorizontal,
+  MoreVertical,
 } from "lucide-react";
 import { ThemeToggle } from "../../components/ui/ThemeProvider";
 import { useClerk } from "@clerk/nextjs";
@@ -310,7 +310,7 @@ export default function DashboardSidebar({ shop }: { shop: Shop }) {
                 isMoreActive ? "bg-bubble-out" : "",
               )}
             >
-              <MoreHorizontal
+              <MoreVertical
                 className={cn(
                   "h-5 w-5",
                   isMoreActive ? "text-primary-dark" : "text-text-muted",
