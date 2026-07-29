@@ -4,6 +4,7 @@ import {
   Settings,
   CreditCard,
   ShoppingBag,
+  TrendingUp,
 } from "lucide-react";
 import { ShopPlan } from "../types";
 
@@ -39,14 +40,20 @@ export const SUBSCRIPTION_LINK: NavLink = {
   exact: false,
 };
 
-// Orders is gated to paid plans — presentation only (hides the link so free
-// vendors aren't shown a feature they can't use), not enforcement. The
-// /dashboard/orders page redirects free-plan visitors on its own even if
-// this link is bypassed via a bookmark or direct URL.
+// Orders and Analytics are both gated to paid plans — presentation only
+// (hides the link so free vendors aren't shown features they can't use),
+// not enforcement. Each page redirects free-plan visitors on its own even
+// if the link is bypassed via a bookmark or direct URL after a downgrade.
 export const ORDERS_LINK: NavLink = {
   href: "/dashboard/orders",
   label: "Orders",
   icon: ShoppingBag,
+  exact: false,
+};
+export const ANALYTICS_LINK: NavLink = {
+  href: "/dashboard/analytics",
+  label: "Analytics",
+  icon: TrendingUp,
   exact: false,
 };
 
@@ -64,22 +71,22 @@ export function getNavLinks(plan: ShopPlan): NavLink[] {
     OVERVIEW_LINK,
     PRODUCTS_LINK,
     ORDERS_LINK,
+    ANALYTICS_LINK,
     SETTINGS_LINK,
     SUBSCRIPTION_LINK,
   ];
 }
 
-/** Mobile bar: always exactly 3 fixed destinations + More. Deliberately not
- *  a slice of getNavLinks — each plan's most-checked destination (Orders
- *  for paid, Subscription as the upgrade path for free) gets a primary
- *  slot on purpose. */
+/** Mobile bar: always exactly 3 fixed destinations + More. Orders keeps its
+ *  primary slot for paid plans (highest-frequency check); Analytics goes
+ *  into More rather than displacing it — a daily "did I get orders" check
+ *  outranks a periodic "how's business" check for bottom-bar real estate. */
 export function getMobilePrimaryLinks(plan: ShopPlan): NavLink[] {
   if (plan === "free") return [OVERVIEW_LINK, PRODUCTS_LINK, SUBSCRIPTION_LINK];
   return [OVERVIEW_LINK, PRODUCTS_LINK, ORDERS_LINK];
 }
 
-/** Everything not on the mobile bar — lives on the /dashboard/more page. */
 export function getMobileMoreLinks(plan: ShopPlan): NavLink[] {
   if (plan === "free") return [SETTINGS_LINK];
-  return [SETTINGS_LINK, SUBSCRIPTION_LINK];
+  return [ANALYTICS_LINK, SETTINGS_LINK, SUBSCRIPTION_LINK];
 }
