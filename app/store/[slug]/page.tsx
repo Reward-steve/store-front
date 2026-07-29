@@ -68,17 +68,19 @@ export default async function StorePage({ params }: StorePageProps) {
 
   // ✅ NORMAL FLOW
   // getShopBySlug already syncs shop.plan to reality if a paid cycle has
-  // lapsed (see lib/plans.ts) — so shop.plan here is trustworthy.
-  // A product is customer-visible only if it's BOTH within the current
-  // plan's product limit AND the vendor hasn't manually hidden it. Either
-  // condition alone isn't enough — a downgrade shouldn't un-hide something
-  // the vendor turned off on purpose, and a manual "show" shouldn't bypass
-  // the plan limit.
+  // lapsed (see lib/planStatus.ts) — so shop.plan here is trustworthy.
+  //
+  // Only plan-limit filtering happens here. Deliberately NOT filtering by
+  // `available` at this layer — StorefrontClient already splits products
+  // into "Available" vs "Out of stock" sections for display. A product a
+  // vendor manually hid should still render as out-of-stock (browsable,
+  // not orderable), not disappear entirely. A plan-locked product, by
+  // contrast, has no business appearing at all — it's not "temporarily
+  // out of stock," it's outside what the vendor is currently paying for.
   const status = getPlanStatus(shop);
   const { active } = splitProductsByPlanLimit(shop.products, status.plan);
-  const visibleProducts = active.filter((p) => p.available);
 
-  const serializedProducts = visibleProducts.map((p: Product) => ({
+  const serializedProducts = active.map((p: Product) => ({
     ...p,
     createdAt: new Date(p.createdAt),
   }));
