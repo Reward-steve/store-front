@@ -121,15 +121,21 @@ export async function deleteShop() {
   });
   if (!shop) throw new Error("Shop not found");
 
-  await db.shop.delete({ where: { id: shop.id } });
+  // Capture what we need before the record is gone
+  const { id, slug, logoUrl, products } = shop;
 
-  await deleteCloudinaryImage(shop.logoUrl);
-  await Promise.all(
-    shop.products.map((p) => deleteCloudinaryImage(p.imageUrl)),
+  await db.shop.delete({ where: { id } });
+
+  const cleanupTargets = [logoUrl, ...products.map((p) => p.imageUrl)].filter(
+    Boolean,
+  );
+
+  await Promise.allSettled(
+    cleanupTargets.map((url) => deleteCloudinaryImage(url)),
   );
 
   revalidatePath("/dashboard");
-  revalidatePath(`/store/${shop.slug}`);
+  revalidatePath(`/store/${slug}`);
 }
 
 /* ─────────────────────────────
