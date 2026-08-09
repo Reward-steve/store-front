@@ -6,6 +6,8 @@ import { Store } from "lucide-react";
 import { ShopPlan } from "../../types";
 import { getPlanStatus, splitProductsByPlanLimit } from "../../lib/plans";
 
+export const dynamic = "force-dynamic";
+
 interface StorePageProps {
   params: Promise<{ slug: string }>;
 }
