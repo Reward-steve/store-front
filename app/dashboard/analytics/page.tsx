@@ -15,6 +15,15 @@ function formatShortDate(iso: string) {
   );
 }
 
+// Shrinks the number as digit count grows so a big naira figure
+// never busts a 3-col mobile grid.
+function getAmountSize(value: string) {
+  const len = value.length;
+  if (len > 14) return "text-sm";
+  if (len > 10) return "text-base";
+  return "text-lg";
+}
+
 export default async function AnalyticsPage() {
   const { userId } = await auth();
   if (!userId) redirect("/login");
@@ -35,6 +44,27 @@ export default async function AnalyticsPage() {
   const hasData = totalOrders > 0;
   const maxTrendValue = Math.max(...trend.map((t) => t.total), 1);
 
+  const summaryCards = [
+    {
+      label: "Total revenue",
+      value: formatNaira(totalRevenue),
+      icon: Wallet,
+      hero: true,
+    },
+    {
+      label: "Orders",
+      value: totalOrders.toString(),
+      icon: Receipt,
+      hero: false,
+    },
+    {
+      label: "Avg. order",
+      value: formatNaira(averageOrderValue),
+      icon: TrendingUp,
+      hero: false,
+    },
+  ];
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
       <div>
@@ -52,48 +82,46 @@ export default async function AnalyticsPage() {
         />
       ) : (
         <>
+          {/* Summary cards */}
           <div className="grid grid-cols-3 gap-3">
-            {[
-              {
-                label: "Total revenue",
-                value: formatNaira(totalRevenue),
-                icon: Wallet,
-                highlight: true,
-              },
-              {
-                label: "Orders",
-                value: totalOrders.toString(),
-                icon: Receipt,
-                highlight: false,
-              },
-              {
-                label: "Avg. order",
-                value: formatNaira(averageOrderValue),
-                icon: TrendingUp,
-                highlight: false,
-              },
-            ].map(({ label, value, icon: Icon, highlight }) => (
+            {summaryCards.map(({ label, value, icon: Icon, hero }) => (
               <div
                 key={label}
-                className="bg-surface border border-border rounded-2xl p-3 flex flex-col gap-2"
+                className={`rounded-2xl p-3 flex flex-col gap-2 min-w-0 ${
+                  hero
+                    ? "bg-gradient-to-br from-primary-dark via-primary to-primary-dark text-white shadow-md"
+                    : "bg-surface border border-border"
+                }`}
               >
                 <div
-                  className={`h-7 w-7 rounded-xl flex items-center justify-center ${highlight ? "bg-bubble-out" : "bg-surface-alt"}`}
+                  className={`h-7 w-7 rounded-xl flex items-center justify-center ${
+                    hero ? "bg-white/15" : "bg-surface-alt"
+                  }`}
                 >
                   <Icon
-                    className={`h-3.5 w-3.5 ${highlight ? "text-primary-dark" : "text-text-muted"}`}
+                    className={`h-3.5 w-3.5 ${hero ? "text-white" : "text-text-muted"}`}
                   />
                 </div>
-                <div>
-                  <p className="text-lg font-black text-text leading-tight break-all">
+                <div className="min-w-0">
+                  <p
+                    className={`${getAmountSize(value)} font-black leading-tight truncate ${
+                      hero ? "text-white" : "text-text"
+                    }`}
+                    title={value}
+                  >
                     {value}
                   </p>
-                  <p className="text-[11px] text-text-muted">{label}</p>
+                  <p
+                    className={`text-[11px] ${hero ? "text-white/70" : "text-text-muted"}`}
+                  >
+                    {label}
+                  </p>
                 </div>
               </div>
             ))}
           </div>
 
+          {/* Trend chart */}
           <div className="bg-surface border border-border rounded-2xl p-4">
             <p className="text-sm font-bold text-text mb-4">Last 7 days</p>
             <div className="flex items-end justify-between gap-2 h-28">
@@ -109,9 +137,15 @@ export default async function AnalyticsPage() {
                   >
                     <div className="w-full flex-1 flex items-end">
                       <div
-                        className={`w-full rounded-t-md transition-all ${point.total > 0 ? "bg-primary" : "bg-surface-alt"}`}
+                        className={`w-full rounded-t-md transition-all ${
+                          point.total > 0
+                            ? "bg-gradient-to-t from-primary-dark to-primary"
+                            : "bg-surface-alt"
+                        }`}
                         style={{ height: `${heightPct}%` }}
-                        title={`${formatNaira(point.total)} · ${point.orders} order${point.orders === 1 ? "" : "s"}`}
+                        title={`${formatNaira(point.total)} · ${point.orders} order${
+                          point.orders === 1 ? "" : "s"
+                        }`}
                       />
                     </div>
                     <p className="text-[10px] text-text-muted">
@@ -123,6 +157,7 @@ export default async function AnalyticsPage() {
             </div>
           </div>
 
+          {/* Pro upsell */}
           <div className="bg-surface-alt border border-dashed border-border rounded-2xl p-4 flex items-start gap-3">
             <div className="h-8 w-8 bg-surface rounded-xl border border-border flex items-center justify-center shrink-0">
               <Sparkles className="h-4 w-4 text-text-muted" />

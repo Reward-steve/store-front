@@ -3,6 +3,7 @@ import Button from "./Button";
 import HeroBadge from "./HeroBadge";
 import TrustBadges from "./TrustBadges";
 import FlowIllustration from "./FlowIllustration";
+import Link from "next/link";
 
 export default function Hero() {
   return (
@@ -91,7 +92,7 @@ export default function Hero() {
 
         {/* Scroll cue — signals there's more below on a full-height hero,
             so mobile visitors don't mistake this for the whole page */}
-        <a
+        <Link
           href="#how-it-works-section"
           aria-label="Scroll to learn how Trazo works"
           className="absolute bottom-6 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-1 text-gray-600 transition-colors hover:text-gray-400 motion-safe:animate-bounce sm:flex"
@@ -100,7 +101,7 @@ export default function Hero() {
             Scroll
           </span>
           <ChevronDown className="h-4 w-4" />
-        </a>
+        </Link>
       </div>
     </section>
   );

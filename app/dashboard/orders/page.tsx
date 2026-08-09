@@ -6,6 +6,7 @@ import { getOrders } from "../../actions/orderActions";
 import { getPlanStatus } from "../../lib/plans";
 import { formatNaira } from "../../lib/utils";
 import EmptyState from "../../components/ui/EmptyState";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -109,7 +110,7 @@ export default async function OrdersPage() {
               </div>
 
               {/* Contact — the action a vendor actually takes after seeing an order */}
-              <a
+              <Link
                 href={whatsappLink(order.customerPhone, order.customerName)}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -117,7 +118,7 @@ export default async function OrdersPage() {
               >
                 <MessageCircle className="h-3.5 w-3.5" />
                 Message {order.customerName.split(" ")[0]} on WhatsApp
-              </a>
+              </Link>
             </div>
           ))}
         </div>

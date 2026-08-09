@@ -70,12 +70,12 @@ export default function TermsOfServicePage() {
             <ol className="space-y-2 border-l border-white/[0.08] pl-4 text-sm">
               {sections.map((s) => (
                 <li key={s.id}>
-                  <a
+                  <Link
                     href={`#${s.id}`}
                     className="text-gray-500 transition-colors hover:text-white"
                   >
                     {s.title}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ol>
@@ -286,7 +286,7 @@ export default function TermsOfServicePage() {
               <li>
                 Use the &ldquo;Report this Vendor&rdquo; option available on the
                 storefront, or contact Trazo at{" "}
-                <a href="mailto:rewardstephen30@gmail.com">support@trazo.app</a>
+                <Link href="mailto:rewardstephen30@gmail.com">support@trazo.app</Link>
                 .
               </li>
               <li>
@@ -420,11 +420,11 @@ export default function TermsOfServicePage() {
               be sent to:
             </p>
             <p>
-              <a href="mailto:rewardstephen30@gmail.com">support@trazo.app</a>
+              <Link href="mailto:rewardstephen30@gmail.com">support@trazo.app</Link>
               <br />
-              <a href="https://wa.me/2349169354424">
+              <Link href="https://wa.me/2349169354424">
                 WhatsApp: +234 9169 354 424
-              </a>
+              </Link>
             </p>
           </Section>
 

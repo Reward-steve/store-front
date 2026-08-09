@@ -144,14 +144,14 @@ export default async function SubscriptionPage({ searchParams }: Props) {
               </p>
               <p className="text-xs text-text-muted mt-0.5 leading-relaxed">
                 {errorMessage}{" "}
-                <a
+                <Link
                   href={`https://wa.me/${WHATSAPP}?text=${supportMsg}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-primary underline"
                 >
                   Contact support
-                </a>{" "}
+                </Link>{" "}
                 if this keeps happening.
               </p>
             </div>
@@ -351,14 +351,14 @@ export default async function SubscriptionPage({ searchParams }: Props) {
         {/* Support */}
         <div className="text-center space-y-1 pb-4">
           <p className="text-xs text-text-muted">Questions? We respond fast.</p>
-          <a
+          <Link
             href={`https://wa.me/${WHATSAPP}?text=${supportMsg}`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-block text-sm text-primary font-medium hover:underline"
           >
             Contact support on WhatsApp
-          </a>
+          </Link>
         </div>
       </div>
     </div>
