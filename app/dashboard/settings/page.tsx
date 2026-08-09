@@ -6,8 +6,6 @@ import Link from "next/link";
 import { ExternalLink, MessageCircle } from "lucide-react";
 import { ShopPlan } from "../../types";
 
-export const dynamic = "force-dynamic";
-
 export default async function SettingsPage() {
   const { userId } = await auth();
 

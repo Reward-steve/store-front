@@ -8,8 +8,6 @@ import { formatNaira } from "../../lib/utils";
 import EmptyState from "../../components/ui/EmptyState";
 import Link from "next/link";
 
-export const dynamic = "force-dynamic";
-
 function whatsappLink(phone: string, customerName: string) {
   const digits = phone.replace(/\D/g, "");
   const message = encodeURIComponent(

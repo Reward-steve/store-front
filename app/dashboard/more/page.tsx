@@ -3,9 +3,6 @@ import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import { getShopByUser } from "../../actions/settings";
 import MoreMenuClient from "../../components/dashboard/MoreMenuClient";
-
-export const dynamic = "force-dynamic";
-
 export default async function MorePage() {
   const { userId } = await auth();
   if (!userId) redirect("/login");
