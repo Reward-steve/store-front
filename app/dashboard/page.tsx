@@ -10,14 +10,11 @@ import {
   Lightbulb,
   Settings,
   Clock,
-  PartyPopper,
 } from "lucide-react";
-
+import { getGreeting } from "../lib/utils";
 import { getShopByUser } from "../actions/settings";
 import CopyLinkButton from "../components/dashboard/CopyLinkButton";
 import { ThemeToggle } from "../components/ui/ThemeProvider";
-
-export const dynamic = "force-dynamic";
 
 export default async function DashboardPage({
   searchParams,
@@ -40,27 +37,29 @@ export default async function DashboardPage({
   const appUrl = "https://trazo-omega.vercel.app";
   const storefrontUrl = `${appUrl}/store/${shop.slug}`;
 
+  // Same background across all three — icons carry the differentiation
+  // via distinct colors instead of a "highlight" treatment.
   const stats = [
     {
       label: "Total products",
       value: totalProducts,
       icon: Package,
-      highlight: false,
-      warn: false,
+      iconColor: "text-blue-500",
+      iconBg: "bg-blue-500/10",
     },
     {
       label: "Live & available",
       value: availableProducts,
       icon: ToggleRight,
-      highlight: true,
-      warn: false,
+      iconColor: "text-primary",
+      iconBg: "bg-primary/10",
     },
     {
       label: "Out of stock",
       value: outOfStock,
       icon: AlertCircle,
-      highlight: false,
-      warn: outOfStock > 0,
+      iconColor: outOfStock > 0 ? "text-amber-500" : "text-text-muted",
+      iconBg: outOfStock > 0 ? "bg-amber-500/10" : "bg-surface-alt",
     },
   ];
 
@@ -88,6 +87,30 @@ export default async function DashboardPage({
   const setupComplete = setupSteps.every((s) => s.done);
   const doneCount = setupSteps.filter((s) => s.done).length;
 
+  const quickActions = [
+    {
+      href: `/store/${shop.slug}`,
+      icon: ExternalLink,
+      title: "View my storefront",
+      desc: "See what customers see",
+      external: true,
+    },
+    {
+      href: "/dashboard/products",
+      icon: Package,
+      title: "Manage products",
+      desc: "Add, edit, or remove products",
+      external: false,
+    },
+    {
+      href: "/dashboard/settings",
+      icon: Settings,
+      title: "Shop settings",
+      desc: "Logo, name, WhatsApp number",
+      external: false,
+    },
+  ];
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
       {/* Header */}
@@ -101,23 +124,29 @@ export default async function DashboardPage({
         <ThemeToggle />
       </div>
 
-      {/* Welcome banner — first visit only */}
-      {isNewUser && (
-        <div className="bg-primary/10 border border-primary/30 rounded-2xl p-4 flex items-start gap-3">
-          <div className="h-9 w-9 bg-primary rounded-xl flex items-center justify-center shrink-0">
-            <PartyPopper className="h-4 w-4 text-white" />
-          </div>
-          <div>
-            <p className="text-sm font-bold text-text">
-              Welcome to {shop.shopName}! 🎉
-            </p>
-            <p className="text-xs text-text-muted mt-0.5">
-              Your storefront is live. Add a few products below and share your
-              link to start getting orders.
-            </p>
-          </div>
+      <div
+        className="rounded-2xl p-4 text-white shadow-lg"
+        style={{
+          background:
+            "linear-gradient(135deg, var(--color-primary), color-mix(in srgb, var(--color-primary) 55%, black))",
+        }}
+      >
+        <p className="text-white/70 text-[11px] uppercase tracking-widest mb-1">
+          {getGreeting()}
+        </p>
+        <p className="text-lg font-bold">{shop.shopName} 👋</p>
+        <p className="text-white/80 text-xs mt-1">
+          {isNewUser
+            ? "Your storefront is live — add a few products and share your link to start getting orders."
+            : `You have ${availableProducts} product${
+                availableProducts === 1 ? "" : "s"
+              } live right now.`}
+        </p>
+
+        <div className="flex items-center gap-2 mt-3">
+          <CopyLinkButton url={storefrontUrl} />
         </div>
-      )}
+      </div>
 
       {/* Plan badge */}
       <div className="bg-surface border border-border rounded-2xl p-3 flex items-center justify-between">
@@ -135,60 +164,25 @@ export default async function DashboardPage({
         </Link>
       </div>
 
-      {/* Storefront card */}
-      <div className="bg-gradient-to-br from-primary-dark via-primary to-primary-dark rounded-2xl p-4 text-white shadow-lg">
-        <p className="text-white/60 text-[11px] uppercase tracking-widest mb-1">
-          Your storefront
-        </p>
-        <p
-          className="text-sm font-bold truncate mb-3"
-          title={`${appUrl.replace("https://", "")}/store/${shop.slug}`}
-        >
-          {appUrl.replace("https://", "")}/store/{shop.slug}
-        </p>
-
-        <div className="flex flex-wrap gap-2">
-          <CopyLinkButton url={storefrontUrl} />
-          <Link
-            href={`/store/${shop.slug}`}
-            target="_blank"
-            className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white text-xs font-medium px-3 py-1.5 rounded-full"
-          >
-            <ExternalLink className="h-3 w-3" />
-            Preview
-          </Link>
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-3">
-        {stats.map(({ label, value, icon: Icon, highlight, warn }) => (
+      {/* Stats — locked 3-col grid, never wraps/stacks on mobile */}
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+        {stats.map(({ label, value, icon: Icon, iconColor, iconBg }) => (
           <div
             key={label}
-            className="bg-surface border border-border rounded-2xl p-3 flex flex-col gap-2"
+            className="bg-surface border border-border rounded-2xl p-2.5 sm:p-3 flex flex-col gap-2 min-w-0"
           >
             <div
-              className={`h-7 w-7 rounded-xl flex items-center justify-center ${
-                highlight
-                  ? "bg-bubble-out"
-                  : warn && value > 0
-                    ? "bg-amber-50 dark:bg-amber-900/20"
-                    : "bg-surface-alt"
-              }`}
+              className={`h-7 w-7 rounded-xl flex items-center justify-center shrink-0 ${iconBg}`}
             >
-              <Icon
-                className={`h-3.5 w-3.5 ${
-                  highlight
-                    ? "text-primary-dark"
-                    : warn && value > 0
-                      ? "text-amber-500"
-                      : "text-text-muted"
-                }`}
-              />
+              <Icon className={`h-3.5 w-3.5 ${iconColor}`} />
             </div>
-            <div>
-              <p className="text-2xl font-black text-text">{value}</p>
-              <p className="text-[11px] text-text-muted">{label}</p>
+            <div className="min-w-0">
+              <p className="text-xl sm:text-2xl font-black text-text truncate">
+                {value}
+              </p>
+              <p className="text-[10px] sm:text-[11px] text-text-muted truncate">
+                {label}
+              </p>
             </div>
           </div>
         ))}
@@ -211,7 +205,9 @@ export default async function DashboardPage({
               <Link
                 key={label}
                 href={done ? "#" : href}
-                className={`flex items-start gap-3 ${done ? "pointer-events-none" : "group"}`}
+                className={`flex items-start gap-3 ${
+                  done ? "pointer-events-none" : "group"
+                }`}
               >
                 <div
                   className={`h-5 w-5 rounded-full border-2 flex items-center justify-center mt-0.5 ${
@@ -238,7 +234,11 @@ export default async function DashboardPage({
                 </div>
                 <div>
                   <p
-                    className={`text-sm ${done ? "text-text-muted line-through" : "text-text font-medium"}`}
+                    className={`text-sm ${
+                      done
+                        ? "text-text-muted line-through"
+                        : "text-text font-medium"
+                    }`}
                   >
                     {label}
                   </p>
@@ -254,23 +254,11 @@ export default async function DashboardPage({
 
       {/* Quick actions */}
       <div className="space-y-2">
-        {[
-          {
-            href: "/dashboard/products",
-            icon: Package,
-            title: "Manage products",
-            desc: "Add, edit, or remove products",
-          },
-          {
-            href: "/dashboard/settings",
-            icon: Settings,
-            title: "Shop settings",
-            desc: "Logo, name, WhatsApp number",
-          },
-        ].map(({ href, icon: Icon, title, desc }) => (
+        {quickActions.map(({ href, icon: Icon, title, desc, external }) => (
           <Link
             key={href}
             href={href}
+            target={external ? "_blank" : undefined}
             className="group flex items-center justify-between bg-surface border border-border rounded-2xl p-4 hover:border-primary"
           >
             <div className="flex items-center gap-3">

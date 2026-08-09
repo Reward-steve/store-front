@@ -19,9 +19,12 @@ export default async function HomePage() {
     dashboardHref = shop ? "/dashboard" : "/onboarding";
   }
 
+  if (dashboardHref) {
+    return <SignedInOverlay dashboardHref={dashboardHref} />;
+  }
+
   return (
     <div className="flex flex-col overflow-x-hidden bg-[#0a0a0a] text-white">
-      {dashboardHref && <SignedInOverlay dashboardHref={dashboardHref} />}
       <Hero />
       <SocialProofBar />
       <PainSection />

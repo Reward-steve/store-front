@@ -7,8 +7,6 @@ import { getPlanStatus } from "../../lib/plans";
 import { formatNaira } from "../../lib/utils";
 import EmptyState from "../../components/ui/EmptyState";
 
-export const dynamic = "force-dynamic";
-
 function formatShortDate(iso: string) {
   return new Intl.DateTimeFormat("en-NG", { weekday: "short" }).format(
     new Date(iso),
@@ -19,9 +17,9 @@ function formatShortDate(iso: string) {
 // never busts a 3-col mobile grid.
 function getAmountSize(value: string) {
   const len = value.length;
-  if (len > 14) return "text-sm";
-  if (len > 10) return "text-base";
-  return "text-lg";
+  if (len > 12) return "text-xs";
+  if (len > 9) return "text-sm";
+  return "text-base";
 }
 
 export default async function AnalyticsPage() {
@@ -44,24 +42,29 @@ export default async function AnalyticsPage() {
   const hasData = totalOrders > 0;
   const maxTrendValue = Math.max(...trend.map((t) => t.total), 1);
 
+  // Same card background across all three — icons carry the differentiation
+  // via distinct colors instead of a "hero" treatment.
   const summaryCards = [
     {
       label: "Total revenue",
       value: formatNaira(totalRevenue),
       icon: Wallet,
-      hero: true,
+      iconColor: "text-primary",
+      iconBg: "bg-primary/10",
     },
     {
       label: "Orders",
       value: totalOrders.toString(),
       icon: Receipt,
-      hero: false,
+      iconColor: "text-blue-500",
+      iconBg: "bg-blue-500/10",
     },
     {
       label: "Avg. order",
       value: formatNaira(averageOrderValue),
       icon: TrendingUp,
-      hero: false,
+      iconColor: "text-amber-500",
+      iconBg: "bg-amber-500/10",
     },
   ];
 
@@ -82,43 +85,33 @@ export default async function AnalyticsPage() {
         />
       ) : (
         <>
-          {/* Summary cards */}
-          <div className="grid grid-cols-3 gap-3">
-            {summaryCards.map(({ label, value, icon: Icon, hero }) => (
-              <div
-                key={label}
-                className={`rounded-2xl p-3 flex flex-col gap-2 min-w-0 ${
-                  hero
-                    ? "bg-gradient-to-br from-primary-dark via-primary to-primary-dark text-white shadow-md"
-                    : "bg-surface border border-border"
-                }`}
-              >
+          {/* Summary cards — locked 3-col grid, never wraps/stacks on mobile */}
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
+            {summaryCards.map(
+              ({ label, value, icon: Icon, iconColor, iconBg }) => (
                 <div
-                  className={`h-7 w-7 rounded-xl flex items-center justify-center ${
-                    hero ? "bg-white/15" : "bg-surface-alt"
-                  }`}
+                  key={label}
+                  className="bg-surface border border-border rounded-2xl p-2.5 sm:p-3 flex flex-col gap-2 min-w-0"
                 >
-                  <Icon
-                    className={`h-3.5 w-3.5 ${hero ? "text-white" : "text-text-muted"}`}
-                  />
-                </div>
-                <div className="min-w-0">
-                  <p
-                    className={`${getAmountSize(value)} font-black leading-tight truncate ${
-                      hero ? "text-white" : "text-text"
-                    }`}
-                    title={value}
+                  <div
+                    className={`h-7 w-7 rounded-xl flex items-center justify-center shrink-0 ${iconBg}`}
                   >
-                    {value}
-                  </p>
-                  <p
-                    className={`text-[11px] ${hero ? "text-white/70" : "text-text-muted"}`}
-                  >
-                    {label}
-                  </p>
+                    <Icon className={`h-3.5 w-3.5 ${iconColor}`} />
+                  </div>
+                  <div className="min-w-0">
+                    <p
+                      className={`${getAmountSize(value)} font-black leading-tight truncate text-text`}
+                      title={value}
+                    >
+                      {value}
+                    </p>
+                    <p className="text-[10px] sm:text-[11px] text-text-muted truncate">
+                      {label}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ),
+            )}
           </div>
 
           {/* Trend chart */}
@@ -137,12 +130,14 @@ export default async function AnalyticsPage() {
                   >
                     <div className="w-full flex-1 flex items-end">
                       <div
-                        className={`w-full rounded-t-md transition-all ${
-                          point.total > 0
-                            ? "bg-gradient-to-t from-primary-dark to-primary"
-                            : "bg-surface-alt"
-                        }`}
-                        style={{ height: `${heightPct}%` }}
+                        className="w-full rounded-t-md transition-all"
+                        style={{
+                          height: `${heightPct}%`,
+                          background:
+                            point.total > 0
+                              ? "linear-gradient(to top, color-mix(in srgb, var(--color-primary) 55%, black), var(--color-primary))"
+                              : "var(--color-surface-alt)",
+                        }}
                         title={`${formatNaira(point.total)} · ${point.orders} order${
                           point.orders === 1 ? "" : "s"
                         }`}

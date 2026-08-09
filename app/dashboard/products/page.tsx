@@ -6,8 +6,6 @@ import { getPlanStatus, splitProductsByPlanLimit } from "../../lib/plans";
 import { PLANS, getProductLimit } from "../../lib/plans";
 import Link from "next/link";
 
-export const dynamic = "force-dynamic";
-
 export default async function ProductsPage() {
   const { userId } = await auth();
   if (!userId) redirect("/login");

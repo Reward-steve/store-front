@@ -23,8 +23,6 @@ import {
   type PlanDefinition,
 } from "../../lib/plans";
 
-export const dynamic = "force-dynamic";
-
 const WHATSAPP = "2348098069257";
 
 const ERROR_MESSAGES: Record<string, string> = {
