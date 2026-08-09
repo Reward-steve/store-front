@@ -15,6 +15,7 @@ import { getGreeting } from "../lib/utils";
 import { getShopByUser } from "../actions/settings";
 import CopyLinkButton from "../components/dashboard/CopyLinkButton";
 import { ThemeToggle } from "../components/ui/ThemeProvider";
+import { currentUser } from "@clerk/nextjs/server";
 
 export default async function DashboardPage({
   searchParams,
@@ -26,6 +27,9 @@ export default async function DashboardPage({
 
   const shop = await getShopByUser();
   if (!shop) redirect("/onboarding");
+  // ...
+  const user = await currentUser();
+  const firstName = user?.firstName ?? "there";
 
   const { new: isNew } = await searchParams;
   const isNewUser = isNew === "true";
@@ -134,11 +138,11 @@ export default async function DashboardPage({
         <p className="text-white/70 text-[11px] uppercase tracking-widest mb-1">
           {getGreeting()}
         </p>
-        <p className="text-lg font-bold">{shop.shopName} 👋</p>
+        <p className="text-lg font-bold">{firstName} 👋</p>
         <p className="text-white/80 text-xs mt-1">
           {isNewUser
-            ? "Your storefront is live — add a few products and share your link to start getting orders."
-            : `You have ${availableProducts} product${
+            ? `${shop.shopName} is live — add a few products and share your link to start getting orders.`
+            : `${shop.shopName} has ${availableProducts} product${
                 availableProducts === 1 ? "" : "s"
               } live right now.`}
         </p>
