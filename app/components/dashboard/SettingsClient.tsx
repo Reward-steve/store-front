@@ -179,7 +179,7 @@ export default function SettingsClient({ shop }: { shop: Shop }) {
           </label>
           <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-border bg-surface-alt text-xs text-text-muted">
             <span className="truncate flex-1">trazo.com/store/{shop.slug}</span>
-            <a
+            <Link
               href={`/store/${shop.slug}`}
               target="_blank"
               rel="noopener noreferrer"
@@ -187,7 +187,7 @@ export default function SettingsClient({ shop }: { shop: Shop }) {
               title="Open storefront"
             >
               <ExternalLink className="h-3.5 w-3.5" />
-            </a>
+            </Link>
           </div>
         </div>
       </div>

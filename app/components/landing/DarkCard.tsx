@@ -1,4 +1,7 @@
+"use client";
+
 import React, { ReactNode } from "react";
+import Link from "next/link";
 
 type CardVariant = "default" | "danger" | "accent";
 
@@ -93,10 +96,10 @@ export default function DarkCard({
 
   if (href) {
     return (
-      <a href={href} className={classes} aria-label={ariaLabel}>
+      <Link href={href} className={classes} aria-label={ariaLabel}>
         {hairline}
         {children}
-      </a>
+      </Link>
     );
   }
 

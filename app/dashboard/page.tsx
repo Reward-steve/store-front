@@ -7,11 +7,10 @@ import {
   ArrowRight,
   ToggleRight,
   AlertCircle,
-  Instagram,
-  MessageCircle,
   Lightbulb,
   Settings,
   Clock,
+  PartyPopper,
 } from "lucide-react";
 
 import { getShopByUser } from "../actions/settings";
@@ -20,12 +19,19 @@ import { ThemeToggle } from "../components/ui/ThemeProvider";
 
 export const dynamic = "force-dynamic";
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ new?: string }>;
+}) {
   const { userId } = await auth();
   if (!userId) redirect("/login");
 
   const shop = await getShopByUser();
   if (!shop) redirect("/onboarding");
+
+  const { new: isNew } = await searchParams;
+  const isNewUser = isNew === "true";
 
   const totalProducts = shop.products.length;
   const availableProducts = shop.products.filter((p) => p.available).length;
@@ -95,7 +101,25 @@ export default async function DashboardPage() {
         <ThemeToggle />
       </div>
 
-      {/* Plan badge (NEW — replaces old banner system) */}
+      {/* Welcome banner — first visit only */}
+      {isNewUser && (
+        <div className="bg-primary/10 border border-primary/30 rounded-2xl p-4 flex items-start gap-3">
+          <div className="h-9 w-9 bg-primary rounded-xl flex items-center justify-center shrink-0">
+            <PartyPopper className="h-4 w-4 text-white" />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-text">
+              Welcome to {shop.shopName}! 🎉
+            </p>
+            <p className="text-xs text-text-muted mt-0.5">
+              Your storefront is live. Add a few products below and share your
+              link to start getting orders.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Plan badge */}
       <div className="bg-surface border border-border rounded-2xl p-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Clock className="h-4 w-4 text-primary" />
@@ -112,15 +136,18 @@ export default async function DashboardPage() {
       </div>
 
       {/* Storefront card */}
-      <div className="bg-primary-dark rounded-2xl p-4 text-white">
+      <div className="bg-gradient-to-br from-primary-dark via-primary to-primary-dark rounded-2xl p-4 text-white shadow-lg">
         <p className="text-white/60 text-[11px] uppercase tracking-widest mb-1">
           Your storefront
         </p>
-        <p className="text-sm font-bold break-all mb-3">
+        <p
+          className="text-sm font-bold truncate mb-3"
+          title={`${appUrl.replace("https://", "")}/store/${shop.slug}`}
+        >
           {appUrl.replace("https://", "")}/store/{shop.slug}
         </p>
 
-        <div className="flex flex-wrap gap-2 mb-4">
+        <div className="flex flex-wrap gap-2">
           <CopyLinkButton url={storefrontUrl} />
           <Link
             href={`/store/${shop.slug}`}
@@ -130,25 +157,6 @@ export default async function DashboardPage() {
             <ExternalLink className="h-3 w-3" />
             Preview
           </Link>
-        </div>
-
-        <div className="border-t border-white/10 pt-3">
-          <p className="text-white/50 text-[11px] mb-2">Share on</p>
-          <div className="flex flex-wrap gap-2">
-            {[
-              { icon: Instagram, label: "Instagram bio" },
-              { icon: MessageCircle, label: "WhatsApp status" },
-              { icon: ExternalLink, label: "Twitter/X bio" },
-            ].map(({ icon: Icon, label }) => (
-              <span
-                key={label}
-                className="flex items-center gap-1 bg-white/10 rounded-full px-2.5 py-1 text-[11px] text-white/70"
-              >
-                <Icon className="h-3 w-3" />
-                {label}
-              </span>
-            ))}
-          </div>
         </div>
       </div>
 
@@ -178,7 +186,6 @@ export default async function DashboardPage() {
                 }`}
               />
             </div>
-
             <div>
               <p className="text-2xl font-black text-text">{value}</p>
               <p className="text-[11px] text-text-muted">{label}</p>
@@ -199,15 +206,12 @@ export default async function DashboardPage() {
               {doneCount}/{setupSteps.length}
             </span>
           </div>
-
           <div className="space-y-3">
             {setupSteps.map(({ done, label, hint, href }) => (
               <Link
                 key={label}
                 href={done ? "#" : href}
-                className={`flex items-start gap-3 ${
-                  done ? "pointer-events-none" : "group"
-                }`}
+                className={`flex items-start gap-3 ${done ? "pointer-events-none" : "group"}`}
               >
                 <div
                   className={`h-5 w-5 rounded-full border-2 flex items-center justify-center mt-0.5 ${
@@ -232,14 +236,9 @@ export default async function DashboardPage() {
                     </svg>
                   )}
                 </div>
-
                 <div>
                   <p
-                    className={`text-sm ${
-                      done
-                        ? "text-text-muted line-through"
-                        : "text-text font-medium"
-                    }`}
+                    className={`text-sm ${done ? "text-text-muted line-through" : "text-text font-medium"}`}
                   >
                     {label}
                   </p>

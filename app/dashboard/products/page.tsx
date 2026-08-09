@@ -4,6 +4,7 @@ import { getShopByUser } from "../../actions/settings";
 import ProductsClient from "../../components/dashboard/ProductsClient";
 import { getPlanStatus, splitProductsByPlanLimit } from "../../lib/plans";
 import { PLANS, getProductLimit } from "../../lib/plans";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -74,12 +75,12 @@ export default async function ProductsPage() {
             {locked.length} are disabled until you upgrade again. Nothing was
             deleted.
           </p>
-          <a
+          <Link
             href="/dashboard/subscription"
             className="inline-block text-xs font-bold text-primary underline underline-offset-2"
           >
             Upgrade to re-enable them →
-          </a>
+          </Link>
         </div>
       )}
 
@@ -94,12 +95,12 @@ export default async function ProductsPage() {
               ? `If it lapses, only your ${freeLimit} oldest products stay visible to customers — the rest will be disabled, not deleted.`
               : "Renew to keep your store fully active."}
           </p>
-          <a
+          <Link
             href="/dashboard/subscription"
             className="inline-block text-xs font-bold text-primary underline underline-offset-2"
           >
             Renew now →
-          </a>
+          </Link>
         </div>
       )}
 
@@ -113,12 +114,12 @@ export default async function ProductsPage() {
           </p>
         </div>
         {status.plan === "free" && (
-          <a
+          <Link
             href="/dashboard/subscription"
             className="text-[10px] px-2 py-1 rounded-full bg-amber-100 text-amber-600 dark:bg-amber-900/20"
           >
             Upgrade available
-          </a>
+          </Link>
         )}
       </div>
 

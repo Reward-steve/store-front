@@ -5,6 +5,7 @@ import { ImageOff } from "lucide-react";
 import { db } from "../../lib/db";
 import { formatNaira } from "../../lib/utils";
 import { OrderItem } from "../../types";
+import Link from "next/link";
 
 export async function generateMetadata({
   params,
@@ -146,14 +147,14 @@ export default async function ReceiptPage({
           </div>
         </div>
 
-        <a
+        <Link
           href={`https://wa.me/${order.customerPhone.replace(/\D/g, "")}`}
           target="_blank"
           rel="noopener noreferrer"
           className="mt-6 block w-full rounded-2xl bg-emerald-500 py-3 text-center text-sm font-bold text-black transition-colors hover:bg-emerald-400"
         >
           Message customer on WhatsApp
-        </a>
+        </Link>
 
         <p className="mt-6 text-center text-xs text-gray-600">
           Powered by Trazo
