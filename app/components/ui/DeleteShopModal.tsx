@@ -20,10 +20,14 @@ export default function DeleteShopModal({
   const [error, setError] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const canDelete = input.trim() === shopName && !loading;
+  const canDelete =
+    input.trim().toLowerCase() === shopName.trim().toLowerCase() && !loading;
 
   useEffect(() => {
     inputRef.current?.focus();
+
+    console.log(input.trim().toLowerCase());
+    console.log(shopName.trim().toLowerCase());
 
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === "Escape" && !loading) onClose();
