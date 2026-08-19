@@ -57,7 +57,7 @@ export default function Hero() {
               <ArrowRight className="h-5 w-5 transition-transform motion-safe:group-hover:translate-x-1" />
             </Button>
 
-            <Button
+            {/* <Button
               href="#interactive-demo"
               variant="outline"
               size="lg"
@@ -65,7 +65,7 @@ export default function Hero() {
             >
               Try the live demo
               <ChevronRight className="h-5 w-5" />
-            </Button>
+            </Button> */}
           </div>
 
           {/* Friction-reducing microcopy — directly under the CTA, where
