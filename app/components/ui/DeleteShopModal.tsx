@@ -29,7 +29,7 @@ export default function DeleteShopModal({
     console.log(input.trim().toLowerCase());
     console.log(shopName.trim().toLowerCase());
 
-    const handleKey = (e: KeyboardEvent) => {
+    const handleKey = (e: KeyboardEvent) => { 
       if (e.key === "Escape" && !loading) onClose();
     };
     window.addEventListener("keydown", handleKey);
