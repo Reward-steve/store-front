@@ -137,14 +137,14 @@ export default function Navbar({
 
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-2">
-            {/* {isLandingPage && (
+            {isLandingPage && (
               <>
-                <Link href="/store/demo" className={linkBase}>
+                {/* <Link href="/store/demo" className={linkBase}>
                   Demo Store
-                </Link>
+                </Link> */}
                 <AuthLinks userId={userId} />
               </>
-            )} */}
+            )}
 
             {isStorefront && (
               <div className="flex items-center gap-2">
