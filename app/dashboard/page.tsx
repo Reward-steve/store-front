@@ -16,6 +16,7 @@ import { getShopByUser } from "../actions/settings";
 import CopyLinkButton from "../components/dashboard/CopyLinkButton";
 import { ThemeToggle } from "../components/ui/ThemeProvider";
 import { currentUser } from "@clerk/nextjs/server";
+import SprayEffect from "../components/ui/SprayEffect";
 
 export default async function DashboardPage({
   searchParams,
@@ -117,6 +118,7 @@ export default async function DashboardPage({
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
+      <SprayEffect show={isNewUser} />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
