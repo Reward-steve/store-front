@@ -133,6 +133,11 @@ export default function CartDrawer({
         settings.whatsappNumber,
         settings.shopName,
         order.id,
+        items.map((i) => ({
+          name: i.name,
+          quantity: i.quantity,
+          price: i.price,
+        })),
         customer,
         total,
       );
