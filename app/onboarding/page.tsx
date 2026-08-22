@@ -7,7 +7,7 @@ import Button from "../components/ui/Button";
 import { createShop } from "../actions/settings";
 import { STEPS } from "./_config/steps";
 import { useSlugAvailability } from "./_hooks/useSlugAvailability";
-import { usePhoneNumber } from "./_hooks/usePhoneNumber";
+import { usePhoneNumber } from "./_hooks/usePhonenumber";
 import ProgressHeader from "./_components/ProgressHeader";
 import StepIntro from "./_components/StepIntro";
 import StepShopInfo from "./_components/StepShopInfo";
