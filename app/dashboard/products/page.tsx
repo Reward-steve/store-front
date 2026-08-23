@@ -1,10 +1,17 @@
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import { getShopByUser } from "../../actions/settings";
-import ProductsClient from "../../components/dashboard/ProductsClient";
-import { getPlanStatus, splitProductsByPlanLimit } from "../../lib/plans";
-import { PLANS, getProductLimit } from "../../lib/plans";
-import Link from "next/link";
+import ProductsClient from "./_components/ProductsClient";
+import {
+  getPlanStatus,
+  splitProductsByPlanLimit,
+  getProductLimit,
+} from "../../lib/plans";
+import {
+  PlanExpiredBanner,
+  PlanExpiringBanner,
+} from "./_components/PlanBanners";
+import PlanUsageCard from "./_components/PlanUsageCard";
 
 export default async function ProductsPage() {
   const { userId } = await auth();
@@ -62,64 +69,24 @@ export default async function ProductsPage() {
         )}
       </div>
 
-      {/* Persists as long as the situation is real — no fade timer, since
-          the problem (hidden products) doesn't resolve itself. */}
       {isOverFreeLimit && (
-        <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 space-y-2">
-          <p className="text-sm font-bold text-text">Your plan has expired</p>
-          <p className="text-xs text-text-muted leading-relaxed">
-            Your store is back on the Free plan. Your {freeLimit} oldest
-            products are still live on your storefront — the other{" "}
-            {locked.length} are disabled until you upgrade again. Nothing was
-            deleted.
-          </p>
-          <Link
-            href="/dashboard/subscription"
-            className="inline-block text-xs font-bold text-primary underline underline-offset-2"
-          >
-            Upgrade to re-enable them →
-          </Link>
-        </div>
+        <PlanExpiredBanner freeLimit={freeLimit} lockedCount={locked.length} />
       )}
 
       {status.isPaid && status.isExpiringSoon && (
-        <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 space-y-1">
-          <p className="text-sm font-bold text-text">
-            {PLANS[status.plan].label} plan renews in {status.daysLeft} day
-            {status.daysLeft === 1 ? "" : "s"}
-          </p>
-          <p className="text-xs text-text-muted leading-relaxed">
-            {shop.products.length > freeLimit
-              ? `If it lapses, only your ${freeLimit} oldest products stay visible to customers — the rest will be disabled, not deleted.`
-              : "Renew to keep your store fully active."}
-          </p>
-          <Link
-            href="/dashboard/subscription"
-            className="inline-block text-xs font-bold text-primary underline underline-offset-2"
-          >
-            Renew now →
-          </Link>
-        </div>
+        <PlanExpiringBanner
+          plan={status.plan}
+          daysLeft={status.daysLeft}
+          overFreeLimit={shop.products.length > freeLimit}
+          freeLimit={freeLimit}
+        />
       )}
 
-      <div className="bg-surface border border-border rounded-2xl p-4 flex items-center justify-between">
-        <div>
-          <p className="text-sm font-bold text-text">
-            {PLANS[status.plan].label} plan
-          </p>
-          <p className="text-[11px] text-text-muted">
-            {active.length}/{limit === null ? "∞" : limit} products used
-          </p>
-        </div>
-        {status.plan === "free" && (
-          <Link
-            href="/dashboard/subscription"
-            className="text-[10px] px-2 py-1 rounded-full bg-amber-100 text-amber-600 dark:bg-amber-900/20"
-          >
-            Upgrade available
-          </Link>
-        )}
-      </div>
+      <PlanUsageCard
+        plan={status.plan}
+        activeCount={active.length}
+        limit={limit}
+      />
 
       {shop.products.length > 0 && (
         <div className="flex items-center gap-2.5 bg-surface border border-border rounded-2xl px-4 py-3">
