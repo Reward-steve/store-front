@@ -92,7 +92,11 @@ export default function ProductForm({
         <div>
           <ImageUpload
             value={form.imageUrl}
-            onChange={(url) => setForm({ ...form, imageUrl: url })}
+            onChange={(url) => {
+              setForm((prev) => ({ ...prev, imageUrl: url }));
+              if (errors.imageUrl)
+                setErrors((prev) => ({ ...prev, imageUrl: "" }));
+            }}
             error={errors.imageUrl}
           />
           <p className="text-[11px] text-text-muted mt-1">
@@ -104,7 +108,11 @@ export default function ProductForm({
           label="Product name"
           placeholder="e.g. Handwoven Ankara Maxi Dress"
           value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
+          onChange={(e) => {
+            const value = e.target.value;
+            setForm((prev) => ({ ...prev, name: value }));
+            if (errors.name) setErrors((prev) => ({ ...prev, name: "" }));
+          }}
           error={errors.name}
         />
 
@@ -115,7 +123,11 @@ export default function ProductForm({
             type="number"
             min="0"
             value={form.price}
-            onChange={(e) => setForm({ ...form, price: e.target.value })}
+            onChange={(e) => {
+              const value = e.target.value;
+              setForm((prev) => ({ ...prev, price: value }));
+              if (errors.price) setErrors((prev) => ({ ...prev, price: "" }));
+            }}
             error={errors.price}
           />
           {showPricePreview && (
@@ -136,7 +148,10 @@ export default function ProductForm({
           <input
             type="checkbox"
             checked={form.trackStock}
-            onChange={(e) => setForm({ ...form, trackStock: e.target.checked })}
+            onChange={(e) => {
+              const checked = e.target.checked;
+              setForm((prev) => ({ ...prev, trackStock: checked }));
+            }}
             className="mt-0.5 w-4 h-4 rounded accent-primary"
           />
           <div>
@@ -158,7 +173,11 @@ export default function ProductForm({
             type="number"
             min="0"
             value={form.stock}
-            onChange={(e) => setForm({ ...form, stock: e.target.value })}
+            onChange={(e) => {
+              const value = e.target.value;
+              setForm((prev) => ({ ...prev, stock: value }));
+              if (errors.stock) setErrors((prev) => ({ ...prev, stock: "" }));
+            }}
             error={errors.stock}
           />
         )}
@@ -175,7 +194,9 @@ export default function ProductForm({
             </p>
           </div>
           <div
-            onClick={() => setForm({ ...form, available: !form.available })}
+            onClick={() =>
+              setForm((prev) => ({ ...prev, available: !prev.available }))
+            }
             className={`relative w-10 h-6 rounded-full transition-colors shrink-0 ${
               form.available ? "bg-primary" : "bg-border"
             }`}
