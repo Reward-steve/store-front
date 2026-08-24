@@ -6,12 +6,15 @@ import Link from "next/link";
 import Button from "../../../components/ui/Button";
 import EmptyState from "../../../components/ui/EmptyState";
 import { useProductActions } from "../_hooks/useProductActions";
-import ProductListItem from "./ProductListItem";
-import LockedProductItem from "./LockedProductItem";
-import ProductModal from "./ProductModal";
-import SuccessToast from "./SuccessToast";
+import ProductListItem from "../_components/ProductListItem";
+import LockedProductItem from "../_components/LockedProductItem";
+import {
+  LimitReachedBanner,
+  DismissableErrorBanner,
+} from "../_components/Banners";
+import ProductModal from "../_components/ProductModal";
+import SuccessToast from "../_components/SuccessToast";
 import type { ClientProduct, ProductModalState } from "../_types";
-import { DismissableErrorBanner, LimitReachedBanner } from "./Banners";
 
 interface ProductsClientProps {
   products: ClientProduct[];
@@ -29,12 +32,18 @@ export default function ProductsClient({
   const [modal, setModal] = useState<ProductModalState>(null);
   const [limitError, setLimitError] = useState("");
   const [toast, setToast] = useState<string | null>(null);
-  const { pendingId, actionError, setActionError, remove, toggle } =
-    useProductActions();
+  const {
+    optimisticProducts,
+    pendingId,
+    actionError,
+    setActionError,
+    remove,
+    toggle,
+  } = useProductActions(products);
 
-  const lockedProducts = products.filter((p) => p.locked);
-  const activeProducts = products.filter((p) => !p.locked);
-  const atLimit = products.length >= productLimit;
+  const lockedProducts = optimisticProducts.filter((p) => p.locked);
+  const activeProducts = optimisticProducts.filter((p) => !p.locked);
+  const atLimit = optimisticProducts.length >= productLimit;
 
   const openAddModal = () => {
     if (atLimit) {
@@ -62,10 +71,10 @@ export default function ProductsClient({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <p className="text-[11px] text-text-muted">
-            {products.length} / {productLimit === Infinity ? "∞" : productLimit}{" "}
-            products
+            {optimisticProducts.length} /{" "}
+            {productLimit === Infinity ? "∞" : productLimit} products
           </p>
-          {products.length > 0 && (
+          {optimisticProducts.length > 0 && (
             <Link
               href={`/store/${shopSlug}`}
               target="_blank"
@@ -97,7 +106,7 @@ export default function ProductsClient({
         />
       )}
 
-      {products.length === 0 ? (
+      {optimisticProducts.length === 0 ? (
         <EmptyState
           icon={<Package className="h-10 w-10" />}
           title="No products yet"

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { Eye, EyeOff, Pencil, Trash2 } from "lucide-react";
 import { formatNaira, cn } from "../../../lib/utils";
-import { ClientProduct } from "../_types";
+import type { ClientProduct } from "../_types";
 
 type Props = {
   product: ClientProduct;
