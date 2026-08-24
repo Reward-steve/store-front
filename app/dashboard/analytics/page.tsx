@@ -1,11 +1,23 @@
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
-import { TrendingUp, Receipt, Wallet, Sparkles } from "lucide-react";
+import {
+  TrendingUp,
+  TrendingDown,
+  Receipt,
+  Wallet,
+  TrendingUp as TrendIcon,
+} from "lucide-react";
 import { getShopByUser } from "../../actions/settings";
-import { getAnalyticsSummary } from "../../actions/analytics";
+import {
+  getAnalyticsSummary,
+  getAdvancedAnalytics,
+} from "../../actions/analytics";
 import { getPlanStatus } from "../../lib/plans";
 import { formatNaira } from "../../lib/utils";
 import EmptyState from "../../components/ui/EmptyState";
+import BestSellersList from "./_components/BestSellersList";
+import RepeatCustomersCard from "./_components/RepeatCustomersCard";
+import AdvancedAnalyticsUpsell from "./_components/AdvancedAnalyticsUpsell";
 
 function formatShortDate(iso: string) {
   return new Intl.DateTimeFormat("en-NG", { weekday: "short" }).format(
@@ -37,8 +49,15 @@ export default async function AnalyticsPage() {
     redirect("/dashboard/subscription?locked=analytics");
   }
 
-  const { totalRevenue, totalOrders, averageOrderValue, trend } =
-    await getAnalyticsSummary();
+  const isPro = status.plan === "pro";
+
+  const [summary, advanced] = await Promise.all([
+    getAnalyticsSummary(),
+    isPro ? getAdvancedAnalytics() : Promise.resolve(null),
+  ]);
+
+  const { totalRevenue, totalOrders, averageOrderValue, trend, weekChangePct } =
+    summary;
   const hasData = totalOrders > 0;
   const maxTrendValue = Math.max(...trend.map((t) => t.total), 1);
 
@@ -62,7 +81,7 @@ export default async function AnalyticsPage() {
     {
       label: "Avg. order",
       value: formatNaira(averageOrderValue),
-      icon: TrendingUp,
+      icon: TrendIcon,
       iconColor: "text-amber-500",
       iconBg: "bg-amber-500/10",
     },
@@ -116,7 +135,30 @@ export default async function AnalyticsPage() {
 
           {/* Trend chart */}
           <div className="bg-surface border border-border rounded-2xl p-4">
-            <p className="text-sm font-bold text-text mb-4">Last 7 days</p>
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-sm font-bold text-text">Last 7 days</p>
+              {weekChangePct === null ? (
+                <span className="text-[10px] text-text-muted">
+                  First week of data
+                </span>
+              ) : (
+                <span
+                  className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                    weekChangePct >= 0
+                      ? "bg-primary/10 text-primary-dark"
+                      : "bg-red-500/10 text-red-500"
+                  }`}
+                >
+                  {weekChangePct >= 0 ? (
+                    <TrendingUp className="h-3 w-3" />
+                  ) : (
+                    <TrendingDown className="h-3 w-3" />
+                  )}
+                  {weekChangePct >= 0 ? "+" : ""}
+                  {weekChangePct}% vs last week
+                </span>
+              )}
+            </div>
             <div className="flex items-end justify-between gap-2 h-28">
               {trend.map((point) => {
                 const heightPct =
@@ -152,21 +194,18 @@ export default async function AnalyticsPage() {
             </div>
           </div>
 
-          {/* Pro upsell */}
-          <div className="bg-surface-alt border border-dashed border-border rounded-2xl p-4 flex items-start gap-3">
-            <div className="h-8 w-8 bg-surface rounded-xl border border-border flex items-center justify-center shrink-0">
-              <Sparkles className="h-4 w-4 text-text-muted" />
-            </div>
-            <div>
-              <p className="text-sm font-bold text-text">
-                Advanced analytics — coming soon
-              </p>
-              <p className="text-[11px] text-text-muted mt-0.5">
-                Best-selling products and repeat-customer insights will be
-                available on the Pro plan.
-              </p>
-            </div>
-          </div>
+          {/* Advanced insights — real, working, Pro-gated (not a placeholder) */}
+          {isPro && advanced ? (
+            <>
+              <BestSellersList items={advanced.bestSellers} />
+              <RepeatCustomersCard
+                repeatCount={advanced.repeatCustomerCount}
+                totalCount={advanced.totalCustomerCount}
+              />
+            </>
+          ) : (
+            <AdvancedAnalyticsUpsell />
+          )}
         </>
       )}
     </div>
