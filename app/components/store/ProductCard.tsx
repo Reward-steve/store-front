@@ -7,6 +7,7 @@ import {
   AlertTriangle,
   X,
   Info,
+  Handshake,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Product, CartItem } from "../../types";
@@ -167,14 +168,31 @@ export default function ProductCard({
           >
             {product.name}
           </h3>
-          <div className="flex items-center justify-between gap-2">
+
+          <div className="flex items-center gap-1.5 flex-wrap">
             <span
-              className={`text-sm sm:text-base font-bold shrink-0 ${
+              className={`text-sm sm:text-base font-bold ${
                 isOutOfStock ? "text-text-muted" : "text-primary"
               }`}
             >
               {formatNaira(product.price)}
             </span>
+            {product.negotiable && !isOutOfStock && (
+              <span className="inline-flex items-center gap-1 text-[9px] font-semibold text-primary-dark bg-primary/10 px-1.5 py-0.5 rounded-full">
+                <Handshake className="h-2.5 w-2.5" />
+                Negotiable
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between gap-2">
+            {isTracked && !isOutOfStock && !isLowStock ? (
+              <p className="text-[10px] text-text-muted">
+                {product.stock} in stock
+              </p>
+            ) : (
+              <span />
+            )}
             {!isOutOfStock && (
               <Button
                 size="sm"
@@ -204,11 +222,6 @@ export default function ProductCard({
               </Button>
             )}
           </div>
-          {isTracked && !isOutOfStock && !isLowStock && (
-            <p className="text-[10px] text-text-muted">
-              {product.stock} in stock
-            </p>
-          )}
         </div>
       </div>
 
@@ -267,9 +280,28 @@ export default function ProductCard({
                 >
                   {product.name}
                 </h2>
-                <p className="text-2xl font-extrabold text-primary">
-                  {formatNaira(product.price)}
-                </p>
+
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="text-2xl font-extrabold text-primary">
+                    {formatNaira(product.price)}
+                  </p>
+                  {product.negotiable && (
+                    <span className="inline-flex items-center gap-1 text-xs font-semibold text-primary-dark bg-primary/10 px-2 py-0.5 rounded-full">
+                      <Handshake className="h-3 w-3" />
+                      Negotiable
+                    </span>
+                  )}
+                </div>
+
+                {product.negotiable && (
+                  <div className="flex items-start gap-2 bg-primary/5 border border-primary/15 rounded-xl px-3 py-2.5">
+                    <Handshake className="h-4 w-4 text-primary-dark shrink-0 mt-0.5" />
+                    <p className="text-xs text-text-muted leading-relaxed">
+                      This price is open to discussion. Message the seller after
+                      ordering to talk price.
+                    </p>
+                  </div>
+                )}
 
                 <hr className="border-border" />
 
