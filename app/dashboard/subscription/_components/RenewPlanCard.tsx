@@ -1,5 +1,5 @@
 import { CreditCard } from "lucide-react";
-import PaystackCheckout from "../../../components/dashboard/PaystackCheckout";
+import PaystackCheckout from "../../settings/_components/PaystackCheckout";
 import type { PlanKey, PlanDefinition } from "../../../lib/plans";
 
 type Props = {

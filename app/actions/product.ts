@@ -67,6 +67,7 @@ export async function createProduct(data: {
   imageUrl: string;
   available: boolean;
   stock: number | null;
+  negotiable: boolean;
 }) {
   const shop = await getUserShop();
 
@@ -98,6 +99,7 @@ export async function updateProduct(
     imageUrl: string;
     available: boolean;
     stock: number | null;
+    negotiable: boolean;
   }>,
 ) {
   const shop = await getUserShop();

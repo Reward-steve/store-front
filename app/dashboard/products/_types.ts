@@ -7,6 +7,7 @@ export interface ClientProduct {
   available: boolean;
   locked: boolean;
   stock: number | null;
+  negotiable: boolean;
   createdAt: Date;
 }
 

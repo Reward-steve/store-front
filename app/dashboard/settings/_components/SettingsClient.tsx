@@ -11,14 +11,14 @@ import {
   Info,
   Trash2,
 } from "lucide-react";
-import Button from "../../components/ui/Button";
-import Input from "../../components/ui/Input";
-import ImageUpload from "../../components/ui/ImageUpload";
-import DeleteShopModal from "../../components/ui/DeleteShopModal";
-import { updateShop, deleteShop } from "../../actions/settings";
-import { cn } from "../../lib/utils";
+import Button from "../../../components/ui/Button";
+import Input from "../../../components/ui/Input";
+import ImageUpload from "../../../components/ui/ImageUpload";
+import DeleteShopModal from "../../../components/ui/DeleteShopModal";
+import { updateShop, deleteShop } from "../../../actions/settings";
+import { cn } from "../../../lib/utils";
 import Link from "next/link";
-import { ShopPlan } from "../../types";
+import { ShopPlan } from "../../../types";
 
 interface Shop {
   id: string;

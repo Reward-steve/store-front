@@ -12,7 +12,7 @@ import {
   getAnalyticsSummary,
   getAdvancedAnalytics,
 } from "../../actions/analytics";
-import { getPlanStatus } from "../../lib/plans";
+import { getPlanStatus, hasAdvancedAnalytics } from "../../lib/plans";
 import { formatNaira } from "../../lib/utils";
 import EmptyState from "../../components/ui/EmptyState";
 import BestSellersList from "./_components/BestSellersList";
@@ -49,11 +49,11 @@ export default async function AnalyticsPage() {
     redirect("/dashboard/subscription?locked=analytics");
   }
 
-  const isPro = status.plan === "pro";
+  const hasAdvanced = hasAdvancedAnalytics(status.plan);
 
   const [summary, advanced] = await Promise.all([
     getAnalyticsSummary(),
-    isPro ? getAdvancedAnalytics() : Promise.resolve(null),
+    hasAdvanced ? getAdvancedAnalytics() : Promise.resolve(null),
   ]);
 
   const { totalRevenue, totalOrders, averageOrderValue, trend, weekChangePct } =
@@ -194,8 +194,8 @@ export default async function AnalyticsPage() {
             </div>
           </div>
 
-          {/* Advanced insights — real, working, Pro-gated (not a placeholder) */}
-          {isPro && advanced ? (
+          {/* Advanced insights — real, working, gated by capability (not a placeholder) */}
+          {hasAdvanced && advanced ? (
             <>
               <BestSellersList items={advanced.bestSellers} />
               <RepeatCustomersCard

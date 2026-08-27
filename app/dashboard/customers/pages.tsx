@@ -3,7 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { Users } from "lucide-react";
 import { getShopByUser } from "../../actions/settings";
 import { getCustomers } from "../../actions/customers";
-import { getPlanStatus } from "../../lib/plans";
+import { getPlanStatus, hasAdvancedAnalytics } from "../../lib/plans";
 import EmptyState from "../../components/ui/EmptyState";
 import CustomerRow from "./_components/CustomerRow";
 
@@ -15,7 +15,7 @@ export default async function CustomersPage() {
   if (!shop) redirect("/onboarding");
 
   const status = getPlanStatus(shop);
-  if (status.plan !== "pro") {
+  if (!hasAdvancedAnalytics(status.plan)) {
     redirect("/dashboard/subscription?locked=customers");
   }
 

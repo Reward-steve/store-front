@@ -1,4 +1,5 @@
-import { Repeat } from "lucide-react";
+import Link from "next/link";
+import { Repeat, ChevronRight } from "lucide-react";
 
 export default function RepeatCustomersCard({
   repeatCount,
@@ -8,11 +9,14 @@ export default function RepeatCustomersCard({
   totalCount: number;
 }) {
   return (
-    <div className="bg-surface border border-border rounded-2xl p-4 flex items-center gap-3">
+    <Link
+      href="/dashboard/customers"
+      className="bg-surface border border-border rounded-2xl p-4 flex items-center gap-3 hover:border-primary/40 transition-colors"
+    >
       <div className="h-9 w-9 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
         <Repeat className="h-4 w-4 text-primary" />
       </div>
-      <div>
+      <div className="flex-1 min-w-0">
         <p className="text-sm font-bold text-text">
           {repeatCount} repeat customer{repeatCount === 1 ? "" : "s"}
         </p>
@@ -21,6 +25,7 @@ export default function RepeatCustomersCard({
           ordered from you
         </p>
       </div>
-    </div>
+      <ChevronRight className="h-4 w-4 text-text-muted shrink-0" />
+    </Link>
   );
 }

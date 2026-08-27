@@ -6,14 +6,11 @@ import Link from "next/link";
 import Button from "../../../components/ui/Button";
 import EmptyState from "../../../components/ui/EmptyState";
 import { useProductActions } from "../_hooks/useProductActions";
-import ProductListItem from "../_components/ProductListItem";
-import LockedProductItem from "../_components/LockedProductItem";
-import {
-  LimitReachedBanner,
-  DismissableErrorBanner,
-} from "../_components/Banners";
-import ProductModal from "../_components/ProductModal";
-import SuccessToast from "../_components/SuccessToast";
+import ProductListItem from "./ProductListItem";
+import LockedProductItem from "./LockedProductItem";
+import { LimitReachedBanner, DismissableErrorBanner } from "./Banners";
+import ProductModal from "./ProductModal";
+import SuccessToast from "./SuccessToast";
 import type { ClientProduct, ProductModalState } from "../_types";
 
 interface ProductsClientProps {
@@ -32,14 +29,8 @@ export default function ProductsClient({
   const [modal, setModal] = useState<ProductModalState>(null);
   const [limitError, setLimitError] = useState("");
   const [toast, setToast] = useState<string | null>(null);
-  const {
-    optimisticProducts,
-    pendingId,
-    actionError,
-    setActionError,
-    remove,
-    toggle,
-  } = useProductActions(products);
+  const { optimisticProducts, pendingId, actionError, setActionError, remove, toggle } =
+    useProductActions(products);
 
   const lockedProducts = optimisticProducts.filter((p) => p.locked);
   const activeProducts = optimisticProducts.filter((p) => !p.locked);
@@ -93,17 +84,11 @@ export default function ProductsClient({
       {atLimit && <LimitReachedBanner />}
 
       {limitError && (
-        <DismissableErrorBanner
-          message={limitError}
-          onDismiss={() => setLimitError("")}
-        />
+        <DismissableErrorBanner message={limitError} onDismiss={() => setLimitError("")} />
       )}
 
       {actionError && (
-        <DismissableErrorBanner
-          message={actionError}
-          onDismiss={() => setActionError("")}
-        />
+        <DismissableErrorBanner message={actionError} onDismiss={() => setActionError("")} />
       )}
 
       {optimisticProducts.length === 0 ? (
@@ -127,9 +112,7 @@ export default function ProductsClient({
                   key={product.id}
                   product={product}
                   isPending={pendingId === product.id}
-                  onToggle={() =>
-                    toggle(product.id, product.name, product.available)
-                  }
+                  onToggle={() => toggle(product.id, product.name, product.available)}
                   onEdit={() => setModal({ type: "edit", product })}
                   onDelete={() => remove(product.id, product.name)}
                 />
@@ -170,4 +153,4 @@ export default function ProductsClient({
       {toast && <SuccessToast message={toast} onDone={() => setToast(null)} />}
     </>
   );
-}
+} 

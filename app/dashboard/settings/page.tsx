@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import { getShopByUser } from "../../actions/settings";
-import SettingsClient from "../../components/dashboard/SettingsClient";
+import SettingsClient from "./_components/SettingsClient";
 import Link from "next/link";
 import { ExternalLink, MessageCircle } from "lucide-react";
 import { ShopPlan } from "../../types";

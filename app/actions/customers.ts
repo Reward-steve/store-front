@@ -2,7 +2,7 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { db } from "../lib/db";
-import { getPlanStatus } from "../lib/plans";
+import { getPlanStatus, hasAdvancedAnalytics } from "../lib/plans";
 
 const CUSTOMER_HISTORY_LIMIT = 1000; // bounds cost; representative for early-stage shops
 
@@ -28,8 +28,8 @@ export async function getCustomers(): Promise<CustomerSummary[]> {
   if (!shop) throw new Error("Shop not found");
 
   const status = getPlanStatus(shop);
-  if (status.plan !== "pro") {
-    throw new Error("Customer list requires the Pro plan");
+  if (!hasAdvancedAnalytics(status.plan)) {
+    throw new Error("Customer list requires a plan with advanced analytics");
   }
 
   const orders = await db.order.findMany({

@@ -8,6 +8,7 @@ export interface Product {
   available: boolean;
   stock?: number | null; // null = unlimited
   createdAt: Date;
+  negotiable: boolean;
 }
 
 export interface ShopSettings {
