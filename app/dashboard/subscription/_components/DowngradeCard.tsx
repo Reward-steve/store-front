@@ -1,5 +1,5 @@
 import { ArrowDownCircle } from "lucide-react";
-import PaystackCheckout from "../../../components/dashboard/PaystackCheckout";
+import PaystackCheckout from "../../settings/_components/PaystackCheckout";
 import { formatPrice } from "../_lib/copy";
 import type { PlanKey, PlanDefinition } from "../../../lib/plans";
 

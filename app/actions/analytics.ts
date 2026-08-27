@@ -2,7 +2,7 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { db } from "../lib/db";
-import { getPlanStatus } from "../lib/plans";
+import { getPlanStatus, hasAdvancedAnalytics } from "../lib/plans";
 import { OrderItem } from "../types";
 
 const TREND_DAYS = 7;
@@ -194,8 +194,10 @@ export async function getAdvancedAnalytics(): Promise<AdvancedAnalytics> {
   if (!shop) throw new Error("Shop not found");
 
   const status = getPlanStatus(shop);
-  if (status.plan !== "pro") {
-    throw new Error("Advanced analytics requires the Pro plan");
+  if (!hasAdvancedAnalytics(status.plan)) {
+    throw new Error(
+      "Advanced analytics requires a plan with advanced analytics",
+    );
   }
 
   const [windowOrders, customerOrders] = await Promise.all([

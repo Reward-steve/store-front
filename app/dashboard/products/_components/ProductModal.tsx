@@ -1,7 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
-import ProductForm from "../../../components/dashboard/ProductForm";
+import ProductForm from "./ProductForm";
 import type { ProductModalState } from "../_types";
 
 type Props = {

@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { AlertCircle } from "lucide-react";
-import { Product } from "../../types";
-import Button from "../ui/Button";
-import Input from "../ui/Input";
-import { createProduct, updateProduct } from "../../actions/product";
-import ImageUpload from "../ui/ImageUpload";
-import { formatNaira } from "../../lib/utils";
+import { AlertCircle, Handshake } from "lucide-react";
+import { Product } from "../../../types";
+import Button from "../../../components/ui/Button";
+import Input from "../../../components/ui/Input";
+import { createProduct, updateProduct } from "../../../actions/product";
+import ImageUpload from "../../../components/ui/ImageUpload";
+import { formatNaira } from "../../../lib/utils";
 
 interface ProductFormProps {
   product?: Product;
@@ -29,6 +29,7 @@ export default function ProductForm({
     available: product?.available ?? true,
     trackStock: product?.stock !== null && product?.stock !== undefined,
     stock: product?.stock?.toString() ?? "",
+    negotiable: product?.negotiable ?? true,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -57,6 +58,7 @@ export default function ProductForm({
         imageUrl: form.imageUrl.trim(),
         available: form.available,
         stock: form.trackStock ? Math.round(Number(form.stock)) : null,
+        negotiable: form.negotiable,
       };
       if (product) {
         await updateProduct(product.id, data);
@@ -87,7 +89,6 @@ export default function ProductForm({
         </div>
       )}
 
-      {/* ── Essentials — the three things every product needs ── */}
       <div className="space-y-3">
         <div>
           <ImageUpload
@@ -135,10 +136,31 @@ export default function ProductForm({
               Customers will pay {formatNaira(priceValue)}
             </p>
           )}
+
+          <label className="flex items-start gap-3 cursor-pointer mt-3 p-3 bg-surface-alt rounded-xl">
+            <input
+              type="checkbox"
+              checked={form.negotiable}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setForm((prev) => ({ ...prev, negotiable: checked }));
+              }}
+              className="mt-0.5 w-4 h-4 rounded accent-primary"
+            />
+            <div>
+              <p className="text-sm font-medium text-text flex items-center gap-1.5">
+                <Handshake className="h-3.5 w-3.5 text-primary" />
+                Price is negotiable
+              </p>
+              <p className="text-xs text-text-muted mt-0.5">
+                Customers will see this price is open to discussion, and know to
+                message you to talk price.
+              </p>
+            </div>
+          </label>
         </div>
       </div>
 
-      {/* ── Stock & visibility — sensible defaults, only touch if needed ── */}
       <div className="bg-surface-alt rounded-xl p-4 space-y-3">
         <p className="text-[11px] font-semibold text-text-muted uppercase tracking-wide">
           Stock & visibility
@@ -210,7 +232,6 @@ export default function ProductForm({
         </label>
       </div>
 
-      {/* ── Actions ── */}
       <div className="flex gap-2 pt-1">
         <Button onClick={handleSubmit} loading={loading} className="flex-1">
           {product ? "Save changes" : "Add product"}

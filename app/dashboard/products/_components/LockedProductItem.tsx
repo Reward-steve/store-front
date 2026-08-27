@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import { Lock, Pencil, Trash2 } from "lucide-react";
+import { formatNaira, cn } from "../../../lib/utils";
 import type { ClientProduct } from "../_types";
-import { cn, formatNaira } from "../../../lib/utils";
 
 type Props = {
   product: ClientProduct;

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Eye, EyeOff, Pencil, Trash2 } from "lucide-react";
+import { Eye, EyeOff, Pencil, Trash2, Handshake } from "lucide-react";
 import { formatNaira, cn } from "../../../lib/utils";
 import type { ClientProduct } from "../_types";
 
@@ -25,7 +25,7 @@ export default function ProductListItem({
       className={cn(
         "flex items-center gap-3 bg-surface border border-border rounded-2xl p-3 transition-all",
         !product.available && "opacity-50",
-        isPending && "opacity-40 pointer-events-none",
+        isPending && "pointer-events-none",
       )}
     >
       <div className="relative h-14 w-14 rounded-xl overflow-hidden shrink-0 bg-surface-alt">
@@ -41,9 +41,17 @@ export default function ProductListItem({
         <p className="font-semibold text-text text-sm truncate">
           {product.name}
         </p>
-        <p className="text-sm font-bold text-primary-dark mt-0.5">
-          {formatNaira(product.price)}
-        </p>
+        <div className="flex items-center gap-1.5 mt-0.5">
+          <p className="text-sm font-bold text-primary-dark">
+            {formatNaira(product.price)}
+          </p>
+          {product.negotiable && (
+            <span className="inline-flex items-center gap-0.5 text-[9px] font-semibold text-primary-dark bg-primary/10 px-1.5 py-0.5 rounded-full">
+              <Handshake className="h-2.5 w-2.5" />
+              Negotiable
+            </span>
+          )}
+        </div>
         {!product.available && (
           <p className="text-[10px] text-text-muted mt-0.5">
             Hidden from customers

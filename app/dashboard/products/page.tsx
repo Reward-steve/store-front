@@ -41,6 +41,7 @@ export default async function ProductsPage() {
     available: p.available,
     locked: locked.some((l) => l.id === p.id),
     stock: p.stock,
+    negotiable: p.negotiable,
     createdAt: p.createdAt,
   }));
 

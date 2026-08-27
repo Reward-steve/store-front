@@ -126,6 +126,10 @@ export function isAtProductLimit(plan: PlanKey, count: number): boolean {
   return count >= limit;
 }
 
+export function hasAdvancedAnalytics(plan: PlanKey): boolean {
+  return PLANS[plan].capabilities.analytics === "advanced";
+}
+
 import { Plan } from "@prisma/client";
 import { db } from "./db";
 

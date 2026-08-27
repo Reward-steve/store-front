@@ -8,33 +8,6 @@ export function formatNaira(amount: number): string {
   }).format(amount);
 }
 
-// export function generateWhatsAppURL(
-//   phone: string,
-//   shopName: string,
-//   orderId: string,
-//   customer: { name: string; phone: string; address: string },
-//   total: number,
-// ): string {
-//   const receiptUrl = `${process.env.NEXT_PUBLIC_APP_URL}/receipt/${orderId}`;
-
-//   const message = [
-//     `🛒 *NEW ORDER — ${shopName.toUpperCase()}*`,
-//     ``,
-//     receiptUrl,
-//     ``,
-//     `*Total:* ${formatNaira(total)}`,
-//     ``,
-//     `*CUSTOMER*`,
-//     `*Name:* ${customer.name}`,
-//     `*Phone:* ${customer.phone}`,
-//     `*Address:* ${customer.address}`,
-//     ``,
-//     `_Please confirm this order and send payment details._`,
-//   ].join("\n");
-
-//   return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-// }
-
 interface OrderItem {
   name: string;
   quantity: number;
@@ -69,7 +42,7 @@ export function generateWhatsAppURL(
     `📞 ${customer.phone}`,
     `📍 ${customer.address}`,
     ``,
-    `Full details: ${receiptUrl}`,
+    `Click for full details: ${receiptUrl}`,
   ].join("\n");
 
   return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;

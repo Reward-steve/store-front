@@ -59,14 +59,16 @@ model Order {
   createdAt DateTime @default(now())
 }
 
+
 model Product {
-  id        String   @id @default(cuid())
-  shopId    String
-  shop      Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  name      String
-  price     Int
-  imageUrl  String   @default("")
-  available Boolean  @default(true)
-  stock     Int?
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid())
+  shopId     String
+  shop       Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  name       String
+  price      Int
+  imageUrl   String   @default("")
+  available  Boolean  @default(true)
+  stock      Int?
+  negotiable Boolean  @default(false)
+  createdAt  DateTime @default(now())
 }
