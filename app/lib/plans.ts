@@ -31,9 +31,9 @@ export const PLANS: Record<PlanKey, PlanDefinition> = {
     period: "Forever, no card needed",
     isPro: false,
     cta: "Get Started Free",
-    productLimit: 10,
+    productLimit: 5,
     features: [
-      "Up to 10 products",
+      "Up to 5 products",
       "Public storefront link",
       "Mobile-friendly storefront",
       "Customers can browse your store",
